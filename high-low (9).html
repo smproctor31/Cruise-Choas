@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>High Low &#127881;</title>
+  <link href="https://fonts.googleapis.com/css2?family=Boogaloo&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #1a0533; --purple: #7b2ff7; --purple-light: #a855f7;
+      --pink: #f72f8e; --pink-light: #fb6bb5; --yellow: #ffd700;
+      --green: #00e676; --red: #ff3d5a; --white: #fff; --cream: #f8f0ff;
+      --muted: rgba(248,240,255,0.45); --card-bg: rgba(255,255,255,0.06);
+      --card-border: rgba(255,255,255,0.12);
+      --fd: 'Boogaloo', cursive; --fb: 'DM Sans', sans-serif;
+    }
+    body { font-family: var(--fb); background: var(--bg); color: var(--cream); min-height: 100dvh; padding: 16px 16px 48px; overflow-x: hidden; position: relative; }
+    body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(ellipse 70% 50% at 20% 20%, rgba(123,47,247,0.25) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 80%, rgba(247,47,142,0.2) 0%, transparent 60%); pointer-events: none; z-index: 0; }
+    .content { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; }
+    .header { text-align: center; padding: 18px 0 22px; }
+    .header h1 { font-family: var(--fd); font-size: clamp(2.8rem,12vw,4rem); color: var(--yellow); line-height: 1; text-shadow: 0 0 20px rgba(255,215,0,0.4), 3px 3px 0 var(--pink); }
+    .header-sub { font-size: 13px; color: var(--muted); margin-top: 4px; letter-spacing: 0.1em; text-transform: uppercase; }
+    .mode-tabs { display: flex; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 4px; margin-bottom: 18px; border: 1px solid var(--card-border); gap: 4px; }
+    .mode-tab { flex: 1; padding: 10px; background: transparent; border: none; border-radius: 9px; color: var(--muted); font-family: var(--fb); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+    .mode-tab.active { background: var(--purple); color: var(--white); }
+    .panel { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px 18px; margin-bottom: 14px; }
+    .panel-title { font-family: var(--fd); font-size: 1.1rem; color: var(--yellow); margin-bottom: 12px; }
+    input[type="text"] { width: 100%; padding: 12px 14px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: var(--white); font-family: var(--fb); font-size: 0.95rem; outline: none; margin-bottom: 10px; transition: border-color 0.2s; }
+    input[type="text"]::placeholder { color: rgba(255,255,255,0.3); }
+    input[type="text"]:focus { border-color: var(--purple-light); }
+    .btn { display: block; width: 100%; padding: 13px 20px; border-radius: 12px; border: none; font-family: var(--fb); font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: transform 0.1s, filter 0.15s; text-align: center; margin-bottom: 8px; }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+    .btn-primary { background: linear-gradient(135deg, var(--purple), var(--pink)); color: var(--white); }
+    .btn-primary:hover { filter: brightness(1.1); }
+    .btn-secondary { background: rgba(255,255,255,0.08); color: var(--cream); border: 1px solid rgba(255,255,255,0.15); }
+    .btn-pass { background: rgba(255,215,0,0.15); color: var(--yellow); border: 1px solid rgba(255,215,0,0.4); }
+    .btn-pass:hover { background: rgba(255,215,0,0.25); }
+    .card-stage { display: flex; justify-content: center; align-items: flex-start; gap: 16px; margin: 16px 0 8px; }
+    .card-wrap { text-align: center; }
+    .card-lbl { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-top: 8px; }
+    .playing-card { width: 120px; height: 170px; border-radius: 12px; background: #fff; box-shadow: 0 8px 24px rgba(0,0,0,0.5); position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; overflow: hidden; }
+    .playing-card.red-card { color: #d32f2f; }
+    .playing-card.black-card { color: #1a1a1a; }
+    .playing-card.face-down { background: #b71c1c; border: 4px solid #7f0000; box-shadow: 0 8px 24px rgba(0,0,0,0.6); padding: 0; }
+    .card-corner { position: absolute; display: flex; flex-direction: column; align-items: center; line-height: 1; }
+    .card-corner.tl { top: 7px; left: 9px; }
+    .card-corner.br { bottom: 7px; right: 9px; transform: rotate(180deg); }
+    .c-rank { font-family: var(--fd); font-size: 1.25rem; font-weight: 700; line-height: 1; }
+    .c-suit { font-size: 0.9rem; line-height: 1.2; }
+    .card-big-suit { font-size: 2.8rem; line-height: 1; }
+    .card-flip { animation: flipIn 0.35s ease-out; }
+    @keyframes flipIn { 0% { transform: rotateY(90deg) scale(0.85); opacity: 0; } 100% { transform: rotateY(0) scale(1); opacity: 1; } }
+    .streak-box { text-align: center; padding: 12px 0 4px; }
+    .streak-num { font-family: var(--fd); font-size: 3.5rem; line-height: 1; color: var(--yellow); text-shadow: 0 0 16px rgba(255,215,0,0.5); }
+    .streak-lbl { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+    .streak-sub { font-size: 12px; color: rgba(255,215,0,0.5); margin-top: 4px; }
+    .result-flash { text-align: center; padding: 12px 16px; border-radius: 10px; font-family: var(--fd); font-size: 1.3rem; margin: 8px 0; animation: popIn 0.25s ease-out; }
+    @keyframes popIn { 0% { transform: scale(0.75); opacity: 0; } 70% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
+    .result-flash.correct { background: rgba(0,230,118,0.15); color: var(--green); border: 1px solid rgba(0,230,118,0.35); }
+    .result-flash.wrong { background: rgba(255,61,90,0.15); color: var(--red); border: 1px solid rgba(255,61,90,0.35); }
+    .guess-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+    .guess-btn { padding: 20px 12px; border-radius: 14px; border: 2px solid transparent; font-family: var(--fd); font-size: 1.5rem; cursor: pointer; transition: all 0.15s; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .guess-btn .sub { font-family: var(--fb); font-size: 0.7rem; font-weight: 500; opacity: 0.75; }
+    .guess-btn:active { transform: scale(0.95); }
+    .guess-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+    .g-high { background: rgba(255,61,90,0.15); border-color: var(--red); color: var(--red); }
+    .g-high:hover:not(:disabled) { background: rgba(255,61,90,0.25); }
+    .g-low { background: rgba(0,230,118,0.12); border-color: var(--green); color: var(--green); }
+    .g-low:hover:not(:disabled) { background: rgba(0,230,118,0.22); }
+    .info-screen { text-align: center; padding: 16px 0 20px; }
+    .info-emoji { font-size: 3.5rem; display: block; margin-bottom: 8px; }
+    .info-title { font-family: var(--fd); font-size: 2.2rem; margin-bottom: 6px; }
+    .info-sub { font-size: 0.9rem; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
+    .go-inner { text-align: center; padding: 10px 0 20px; }
+    .go-trophy { font-size: 3rem; display: block; margin-bottom: 8px; }
+    .go-title { font-family: var(--fd); font-size: 2rem; color: var(--yellow); margin-bottom: 4px; }
+    .go-sub { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+    .score-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .score-row:last-child { border-bottom: none; }
+    .score-left { display: flex; align-items: center; gap: 10px; }
+    .s-av { width: 32px; height: 32px; border-radius: 50%; background: rgba(123,47,247,0.25); border: 1px solid rgba(123,47,247,0.5); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--purple-light); flex-shrink: 0; }
+    .s-av.you { border-color: var(--yellow); color: var(--yellow); background: rgba(255,215,0,0.1); }
+    .s-av.act { border-color: var(--pink); color: var(--pink); background: rgba(247,47,142,0.15); box-shadow: 0 0 8px rgba(247,47,142,0.3); }
+    .s-name { font-size: 0.9rem; line-height: 1.25; }
+    .s-tag { font-size: 10px; color: var(--pink); margin-left: 4px; }
+    .s-detail { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .score-right { text-align: right; flex-shrink: 0; }
+    .s-cur { font-family: var(--fd); font-size: 1.5rem; color: var(--yellow); line-height: 1; }
+    .s-cur-lbl { font-size: 10px; color: var(--muted); }
+    .curr-banner { background: rgba(123,47,247,0.15); border: 1px solid rgba(123,47,247,0.3); border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+    .curr-banner .cname { font-family: var(--fd); font-size: 1.15rem; color: var(--pink-light); }
+    .curr-banner .csub { font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+    .deck-ct { font-size: 11px; color: var(--muted); }
+    .code-badge { display: inline-flex; background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3); border-radius: 10px; padding: 8px 16px; font-family: var(--fd); font-size: 1.6rem; color: var(--yellow); letter-spacing: 5px; cursor: pointer; margin-bottom: 12px; }
+    .code-badge small { font-size: 0.4rem; letter-spacing: 0.1em; color: var(--muted); display: block; font-family: var(--fb); }
+    .pchips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; justify-content: center; }
+    .pchip { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 5px 12px; font-size: 12px; color: var(--muted); }
+    .wait-turn { text-align: center; padding: 14px; color: var(--muted); font-size: 0.9rem; line-height: 1.7; }
+    .wait-turn strong { color: var(--pink-light); }
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(42,10,74,0.95); border: 1px solid rgba(123,47,247,0.4); color: var(--white); padding: 10px 20px; border-radius: 30px; font-size: 13px; opacity: 0; transition: opacity 0.25s, transform 0.25s; pointer-events: none; white-space: nowrap; z-index: 999; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .hidden { display: none !important; }
+    .mt10 { margin-top: 10px; }
+    .mt14 { margin-top: 14px; }
+    .tc { text-align: center; }
+</style>
+</head>
+<body>
+<div class="content">
+  <div class="header">
+    <h1>High Low &#127881;</h1>
+    <div class="header-sub">&#9824; Party Card Game &#9829;</div>
+  </div>
+
+  <div id="screen-lobby">
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="tabPP" onclick="switchMode('pp')">&#129309; Pass &amp; Play</button>
+      <button class="mode-tab" id="tabMP" onclick="switchMode('mp')">&#128241; Multiplayer</button>
+    </div>
+    <div id="setup-pp">
+      <div class="panel">
+        <div class="panel-title">&#127880; Who&#39;s Playing?</div>
+        <div id="playerInputs">
+          <input type="text" placeholder="Player 1 name" maxlength="20">
+          <input type="text" placeholder="Player 2 name" maxlength="20">
+        </div>
+        <button class="btn btn-secondary mt10" onclick="addPlayer()">+ Add Player</button>
+        <button class="btn btn-primary mt10" onclick="startPP()">&#127185; Deal Cards!</button>
+      </div>
+    </div>
+    <div id="setup-mp" class="hidden">
+      <div class="panel">
+        <div class="panel-title">&#127882; Create Game</div>
+        <input type="text" id="hostName" placeholder="Your name" maxlength="20">
+        <button class="btn btn-primary" onclick="createMP()">Create Game</button>
+      </div>
+      <div class="panel">
+        <div class="panel-title">&#127880; Join Game</div>
+        <input type="text" id="joinName" placeholder="Your name" maxlength="20">
+        <input type="text" id="joinCode" placeholder="Game code" maxlength="6" style="text-transform:uppercase">
+        <button class="btn btn-primary" onclick="joinMP()">Join Game</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-waiting" class="hidden">
+    <div class="panel tc">
+      <div class="panel-title">&#127903; Game Code</div>
+      <div class="code-badge" onclick="copyCode()">
+        <div><span id="codeDisplay">&#8212;&#8212;</span><small>tap to copy</small></div>
+      </div>
+      <p style="font-size:13px;color:var(--muted)">Share this code with your friends</p>
+      <div style="margin-top:14px">
+        <div class="panel-title">Players Joined</div>
+        <div class="pchips" id="waitingPlayers"></div>
+      </div>
+      <div id="hostStartWrap" class="hidden mt14">
+        <button class="btn btn-primary" onclick="hostStartMP()">&#127185; Deal Cards!</button>
+      </div>
+      <p id="waitHint" class="mt14" style="font-size:12px;color:var(--muted)">Waiting for host to start&#8230;</p>
+    </div>
+  </div>
+
+  <div id="screen-game" class="hidden">
+    <div class="curr-banner">
+      <div><div class="csub">Now Playing</div><div class="cname" id="currName">&#8212;</div></div>
+      <div class="deck-ct" id="deckCt">52 left</div>
+    </div>
+    <div class="card-stage">
+      <div class="card-wrap">
+        <div class="playing-card black-card" id="currentCard">
+          <div class="card-corner tl"><span class="c-rank">A</span><span class="c-suit">&#9824;</span></div>
+          <div class="card-big-suit">&#9824;</div>
+          <div class="card-corner br"><span class="c-rank">A</span><span class="c-suit">&#9824;</span></div>
+        </div>
+        <div class="card-lbl">Current</div>
+      </div>
+      <div class="card-wrap">
+        <div class="playing-card face-down" id="nextCard"></div>
+        <div class="card-lbl">Next Card</div>
+      </div>
+    </div>
+    <div class="streak-box">
+      <div class="streak-num" id="streakNum">0</div>
+      <div class="streak-lbl">in a row</div>
+      <div class="streak-sub" id="streakSub"></div>
+    </div>
+    <div id="resultFlash" class="result-flash hidden"></div>
+    <div class="guess-btns" id="guessBtns">
+      <button class="guess-btn g-high" id="btnH" onclick="handleGuess('higher')">
+        &#128314; Higher
+        <span class="sub">Next card is higher</span>
+      </button>
+      <button class="guess-btn g-low" id="btnL" onclick="handleGuess('lower')">
+        &#128315; Lower
+        <span class="sub">Next card is lower</span>
+      </button>
+    </div>
+    <button id="passBtn" class="btn btn-pass hidden" onclick="handlePass()" style="margin-bottom:12px">
+      &#129309; Pass Turn &nbsp;<span style="font-size:0.75rem;opacity:0.7;font-weight:400">(3 correct in a row!)</span>
+    </button>
+    <div id="waitTurn" class="hidden panel">
+      <div class="wait-turn">Waiting for <strong id="waitName"></strong> to guess&#8230;</div>
+    </div>
+    <div id="passScreen" class="hidden panel">
+      <div class="info-screen">
+        <span class="info-emoji" id="psEmoji">&#129309;</span>
+        <div class="info-title" id="psTitle">Passed!</div>
+        <div class="info-sub" id="psSub"></div>
+      </div>
+      <button class="btn btn-primary" id="psBtn">&#8212;</button>
+      <button class="btn btn-secondary" onclick="goHome()">&#127968; Main Menu</button>
+    </div>
+    <div id="deckEndScreen" class="hidden panel">
+      <div class="info-screen">
+        <span class="info-emoji">&#127185;</span>
+        <div class="info-title" style="color:var(--yellow)" id="deMsg">Deck cleared!</div>
+        <div class="info-sub">What would you like to do?</div>
+      </div>
+      <button class="btn btn-primary" id="deContBtn">&#128260; Continue Game</button>
+      <button class="btn btn-secondary" id="deEndBtn">&#127942; End Game &amp; See Results</button>
+    </div>
+    <div class="panel mt14">
+      <div class="panel-title">&#127942; Scoreboard</div>
+      <div id="scoreboard"></div>
+    </div>
+    <div id="gameoverPanel" class="hidden panel">
+      <div class="go-inner">
+        <span class="go-trophy">&#127942;</span>
+        <div class="go-title" id="goWinner"></div>
+        <div class="go-sub">Best streak wins!</div>
+      </div>
+      <div id="goScores"></div>
+      <button class="btn btn-primary mt14" onclick="playAgain()">&#127881; Play Again!</button>
+      <button class="btn btn-secondary" onclick="goHome()">&#127968; Main Menu</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+
+  // ===== CARD ENGINE =====
+  const SUITS = ['S','H','D','C'];
+  const SYM   = {S:'\u2660', H:'\u2665', D:'\u2666', C:'\u2663'};
+  const RANKS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+  const VAL   = {2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13,A:14};
+  const REDS  = ['H','D'];
+
+  function buildDeck() {
+    var d = [];
+    for (var si=0; si<SUITS.length; si++)
+      for (var ri=0; ri<RANKS.length; ri++)
+        d.push(RANKS[ri] + SUITS[si]);
+    return shuffleDeck(d);
+  }
+  function shuffleDeck(a) {
+    var b = a.slice();
+    for (var i=b.length-1; i>0; i--) {
+      var j = Math.floor(Math.random()*(i+1));
+      var tmp=b[i]; b[i]=b[j]; b[j]=tmp;
+    }
+    return b;
+  }
+  function parseCard(str) { return { r: str.slice(0,-1), s: str.slice(-1) }; }
+  function isRed(s) { return REDS.indexOf(s) !== -1; }
+  function freshDeckMinus(card) {
+    var d = buildDeck();
+    var i = d.indexOf(card);
+    if (i !== -1) d.splice(i, 1);
+    return d;
+  }
+
+  // ===== DOM HELPERS =====
+  function ge(id) { return document.getElementById(id); }
+  function show(id) { var el=ge(id); if(el) el.classList.remove('hidden'); }
+  function hide(id) { var el=ge(id); if(el) el.classList.add('hidden'); }
+  function showScreen(name) {
+    ['lobby','waiting','game'].forEach(function(n) {
+      var el = ge('screen-'+n);
+      if (el) el.classList.toggle('hidden', n !== name);
+    });
+  }
+  function showToast(msg) {
+    var el = ge('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(function() { el.classList.remove('show'); }, 2200);
+  }
+  function initials(n) {
+    var s = (n||'?').trim().split(' ').map(function(w){return w[0];}).join('').toUpperCase();
+    return s.slice(0,2) || '?';
+  }
+
+  function renderCard(el, str, animate) {
+    var c = parseCard(str);
+    var col = isRed(c.s) ? 'red-card' : 'black-card';
+    el.className = 'playing-card ' + col + (animate ? ' card-flip' : '');
+    el.innerHTML =
+      '<div class="card-corner tl"><span class="c-rank">'+c.r+'</span><span class="c-suit">'+SYM[c.s]+'</span></div>' +
+      '<div class="card-big-suit">'+SYM[c.s]+'</div>' +
+      '<div class="card-corner br"><span class="c-rank">'+c.r+'</span><span class="c-suit">'+SYM[c.s]+'</span></div>';
+    if (animate) setTimeout(function(){ el.classList.remove('card-flip'); }, 400);
+  }
+
+  function renderFaceDown(el) {
+    el.className = 'playing-card face-down';
+    el.innerHTML =
+      '<svg width="112" height="162" viewBox="0 0 112 162" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect width="112" height="162" fill="#c62828" rx="6"/>' +
+      '<rect x="5" y="5" width="102" height="152" rx="4" fill="none" stroke="#ef5350" stroke-width="1.5"/>' +
+      '<rect x="9" y="9" width="94" height="144" rx="3" fill="none" stroke="#ef9a9a" stroke-width="0.6" opacity="0.5"/>' +
+      '<line x1="9" y1="9" x2="103" y2="153" stroke="#ef5350" stroke-width="0.5" opacity="0.3"/>' +
+      '<line x1="103" y1="9" x2="9" y2="153" stroke="#ef5350" stroke-width="0.5" opacity="0.3"/>' +
+      '<circle cx="56" cy="81" r="18" fill="none" stroke="#ef5350" stroke-width="1" opacity="0.5"/>' +
+      '<text x="56" y="87" text-anchor="middle" font-size="13" fill="#ef9a9a" opacity="0.9" font-family="serif">\u2666</text>' +
+      '<text x="14" y="24" font-size="10" fill="#ef9a9a" opacity="0.7" font-family="serif">\u2666</text>' +
+      '</svg>';
+  }
+
+  function setGD(v) { ge('btnH').disabled=v; ge('btnL').disabled=v; }
+
+  function flashResult(ok, msg) {
+    var el = ge('resultFlash');
+    el.className = 'result-flash ' + (ok ? 'correct' : 'wrong');
+    el.textContent = msg;
+    show('resultFlash');
+    setTimeout(function(){ hide('resultFlash'); }, 1800);
+  }
+
+  function updateStreak(streak, best) {
+    ge('streakNum').textContent = streak;
+    ge('streakSub').textContent = best > 0 ? '\uD83D\uDD25 Best: '+best : '';
+  }
+
+  function renderBoard(players, activeIdx, myId) {
+    var html = '';
+    for (var i=0; i<players.length; i++) {
+      var p = players[i];
+      var isActive = (i === activeIdx);
+      var isMe = myId && p.id === myId;
+      var avCls = 's-av' + (isActive ? ' act' : (isMe ? ' you' : ''));
+      var lastTxt = p.lastStreak > 0 ? 'last: '+p.lastStreak : 'last: \u2014';
+      html +=
+        '<div class="score-row">' +
+          '<div class="score-left">' +
+            '<div class="'+avCls+'">'+initials(p.name)+'</div>' +
+            '<div>' +
+              '<div class="s-name">'+p.name+(isActive ? '<span class="s-tag">\u25BA playing</span>' : '')+(isMe ? ' <small style="font-size:10px;color:var(--muted)">(you)</small>' : '')+'</div>' +
+              '<div class="s-detail">'+lastTxt+' &nbsp;|&nbsp; best: '+p.best+'</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="score-right">' +
+            '<div class="s-cur">'+p.streak+'</div>' +
+            '<div class="s-cur-lbl">streak</div>' +
+          '</div>' +
+        '</div>';
+    }
+    ge('scoreboard').innerHTML = html;
+  }
+
+  function buildGoScores(players, myId) {
+    var sorted = players.slice().sort(function(a,b){ return b.best-a.best; });
+    var html = '';
+    for (var i=0; i<sorted.length; i++) {
+      var p = sorted[i];
+      html +=
+        '<div class="score-row">' +
+          '<div class="score-left">' +
+            '<div class="s-av'+(p.id===myId?' you':'')+'">'+initials(p.name)+'</div>' +
+            '<div class="s-name">'+(i===0?'\uD83D\uDC51 ':'')+p.name+'</div>' +
+          '</div>' +
+          '<div class="score-right">' +
+            '<div class="s-cur">'+p.best+'</div>' +
+            '<div class="s-cur-lbl">best streak</div>' +
+          '</div>' +
+        '</div>';
+    }
+    return html;
+  }
+
+  // ===== MODE / LOBBY =====
+  var mode = 'pp';
+  var PASS_AT = 3;
+
+  function switchMode(m) {
+    mode = m;
+    ge('tabPP').classList.toggle('active', m==='pp');
+    ge('tabMP').classList.toggle('active', m==='mp');
+    ge('setup-pp').classList.toggle('hidden', m!=='pp');
+    ge('setup-mp').classList.toggle('hidden', m!=='mp');
+  }
+  function addPlayer() {
+    var inputs = document.querySelectorAll('#playerInputs input');
+    if (inputs.length >= 6) { showToast('Max 6 players!'); return; }
+    var inp = document.createElement('input');
+    inp.type='text'; inp.placeholder='Player '+(inputs.length+1)+' name'; inp.maxLength=20;
+    ge('playerInputs').appendChild(inp);
+  }
+  function goHome() {
+    if (gameUnsub) { gameUnsub(); gameUnsub=null; }
+    hide('passScreen'); hide('gameoverPanel'); hide('deckEndScreen');
+    show('guessBtns');
+    showScreen('lobby');
+  }
+  function handleGuess(dir) {
+    if (mode==='mp') { mpGuess(dir); } else { ppGuess(dir); }
+  }
+  function handlePass() {
+    if (mode==='mp') { mpPassTurn(); } else { ppPassTurn(); }
+  }
+
+  // ===== PASS AND PLAY =====
+  var ppPlayers = [];
+  var ppIdx     = 0;
+  var ppDeck    = [];
+  var ppCard    = null;
+  var ppLocked  = false;
+
+  function startPP() {
+    var inputs = document.querySelectorAll('#playerInputs input');
+    var names = [];
+    for (var i=0; i<inputs.length; i++) {
+      var v = inputs[i].value.trim();
+      if (v) names.push(v);
+    }
+    if (!names.length) { showToast('Add at least one player!'); return; }
+
+    ppPlayers = [];
+    for (var j=0; j<names.length; j++) {
+      ppPlayers.push({ name: names[j], streak: 0, lastStreak: 0, best: 0 });
+    }
+    ppIdx    = 0;
+    ppDeck   = buildDeck();
+    ppCard   = ppDeck.pop();
+    ppLocked = false;
+
+    hide('passScreen'); hide('gameoverPanel'); hide('deckEndScreen');
+    show('guessBtns');
+    showScreen('game');
+    renderPPState();
+  }
+
+  function renderPPState() {
+    var p = ppPlayers[ppIdx];
+    ge('currName').textContent = p.name;
+    ge('deckCt').textContent   = ppDeck.length + ' cards left';
+    updateStreak(p.streak, p.best);
+    renderCard(ge('currentCard'), ppCard, false);
+    renderFaceDown(ge('nextCard'));
+    renderBoard(ppPlayers, ppIdx, null);
+    checkPassBtn();
+    setGD(false);
+    ppLocked = false;
+  }
+
+  function checkPassBtn() {
+    var p = ppPlayers[ppIdx];
+    if (p.streak >= PASS_AT && ppPlayers.length > 1) show('passBtn');
+    else hide('passBtn');
+  }
+
+  function ppGuess(dir) {
+    if (ppLocked) return;
+    ppLocked = true;
+    setGD(true);
+    hide('passBtn');
+
+    var nextStr = ppDeck.pop();
+    renderCard(ge('nextCard'), nextStr, true);
+
+    var curVal  = VAL[parseCard(ppCard).r];
+    var nextVal = VAL[parseCard(nextStr).r];
+    var correct = (dir==='higher') ? nextVal > curVal : nextVal < curVal;
+
+    setTimeout(function() {
+      var p = ppPlayers[ppIdx];
+      if (correct) {
+        ppCard = nextStr;
+        p.streak++;
+        if (p.streak > p.best) p.best = p.streak;
+        flashResult(true, '\u2713 Correct! Streak: '+p.streak+' \uD83D\uDD25');
+        updateStreak(p.streak, p.best);
+        ge('deckCt').textContent = ppDeck.length + ' cards left';
+        renderBoard(ppPlayers, ppIdx, null);
+        if (ppDeck.length === 0) {
+          setTimeout(function(){ ppDeckEnd(); }, 900);
+        } else {
+          setTimeout(function(){
+            renderCard(ge('currentCard'), ppCard, false);
+            renderFaceDown(ge('nextCard'));
+            checkPassBtn();
+            setGD(false);
+            ppLocked = false;
+          }, 700);
+        }
+      } else {
+        var c = parseCard(nextStr);
+        var reason = (nextVal===curVal) ? 'Equal card \u2014 bust!' : 'It was '+c.r+SYM[c.s];
+        p.lastStreak = p.streak;
+        p.streak = 0;
+        ppCard = nextStr;
+        flashResult(false, '\uD83D\uDCA5 Bust! '+reason+' \u2014 streak reset!');
+        renderBoard(ppPlayers, ppIdx, null);
+        setTimeout(function(){
+          renderCard(ge('currentCard'), ppCard, false);
+          renderFaceDown(ge('nextCard'));
+          ge('deckCt').textContent = ppDeck.length + ' cards left';
+          updateStreak(0, p.best);
+          hide('passBtn');
+          setGD(false);
+          ppLocked = false;
+        }, 1200);
+      }
+    }, 380);
+  }
+
+  function ppPassTurn() {
+    var p = ppPlayers[ppIdx];
+    p.lastStreak = p.streak;
+    hide('passBtn'); hide('guessBtns');
+    var nextIdx = (ppIdx+1) % ppPlayers.length;
+    ge('psEmoji').textContent = '\uD83E\uDD1D';
+    ge('psTitle').textContent = 'Nice streak!';
+    ge('psTitle').style.color = 'var(--yellow)';
+    ge('psSub').textContent   = p.name+' passed with a streak of '+p.lastStreak+'!';
+    show('passScreen');
+    var btn = ge('psBtn');
+    btn.textContent = 'Pass to '+ppPlayers[nextIdx].name+' \u2192';
+    btn.disabled    = false;
+    btn.onclick = function() {
+      ppIdx = nextIdx;
+      // Keep the SAME deck — do not reset on pass
+      ppPlayers[ppIdx].streak = 0;
+      hide('passScreen');
+      show('guessBtns');
+      renderPPState();
+    };
+  }
+
+  function ppDeckEnd() {
+    hide('guessBtns'); hide('resultFlash');
+    var p = ppPlayers[ppIdx];
+    ge('deMsg').textContent = p.name+' cleared the deck! Streak: '+p.streak+' \uD83D\uDD25';
+    show('deckEndScreen');
+    ge('deContBtn').onclick = function() {
+      hide('deckEndScreen');
+      ppDeck = freshDeckMinus(ppCard);
+      ppLocked = false;
+      ge('deckCt').textContent = ppDeck.length + ' cards left';
+      renderCard(ge('currentCard'), ppCard, false);
+      renderFaceDown(ge('nextCard'));
+      checkPassBtn();
+      show('guessBtns');
+      setGD(false);
+      showToast('New deck shuffled \u2014 keep going! \uD83D\uDD25');
+    };
+    ge('deEndBtn').onclick = function() {
+      hide('deckEndScreen');
+      ppShowGameOver();
+    };
+  }
+
+  function ppShowGameOver() {
+    hide('guessBtns'); hide('passScreen'); hide('deckEndScreen');
+    show('gameoverPanel');
+    var best = 0;
+    for (var i=0; i<ppPlayers.length; i++) if (ppPlayers[i].best > best) best = ppPlayers[i].best;
+    var winners = ppPlayers.filter(function(p){ return p.best===best; });
+    ge('goWinner').textContent = winners.length===1 ? '\uD83C\uDF89 '+winners[0].name+' wins!' : "It's a tie! \uD83E\uDD1D";
+    ge('goScores').innerHTML = buildGoScores(ppPlayers, null);
+  }
+
+  function playAgain() {
+    for (var i=0; i<ppPlayers.length; i++) { ppPlayers[i].streak=0; ppPlayers[i].lastStreak=0; ppPlayers[i].best=0; }
+    ppIdx=0; ppDeck=buildDeck(); ppCard=ppDeck.pop(); ppLocked=false;
+    hide('gameoverPanel'); hide('passScreen'); hide('deckEndScreen');
+    show('guessBtns');
+    renderPPState();
+  }
+
+  // ===== MULTIPLAYER =====
+  var gameId='', myId='', myName='', isHost=false, gameUnsub=null, mpLocked=false;
+
+  function genUid()  { return Math.random().toString(36).substring(2,10); }
+  function genCode() { return Math.random().toString(36).substring(2,8).toUpperCase(); }
+
+  function initFB() {
+    try {
+      if (!firebase.apps.length) {
+        firebase.initializeApp({
+          apiKey: "AIzaSyCP4vD87Kp7ni9WQ4IIOoPIZKgAo_NPE_g",
+          authDomain: "proctor-bingo.firebaseapp.com",
+          projectId: "proctor-bingo",
+          storageBucket: "proctor-bingo.firebasestorage.app",
+          messagingSenderId: "272737958124",
+          appId: "1:272737958124:web:0478173133503029f58dc9"
+        });
+      }
+      return firebase.firestore();
+    } catch(e) {
+      showToast('Connection error. Check internet.'); return null;
+    }
+  }
+
+  function copyCode() {
+    navigator.clipboard.writeText(gameId).catch(function(){});
+    showToast('Code copied: '+gameId);
+  }
+
+  async function createMP() {
+    var db = initFB(); if (!db) return;
+    var name = ge('hostName').value.trim();
+    if (!name) { showToast('Enter your name'); return; }
+    myName=name; myId=genUid(); isHost=true; gameId=genCode();
+    var deck=buildDeck(), card=deck.pop();
+    await db.collection('hl_games').doc(gameId).set({
+      phase:'waiting', hostId:myId,
+      players:[{id:myId,name:name,streak:0,lastStreak:0,best:0}],
+      deck:deck, currentCard:card, currentIdx:0
+    });
+    ge('codeDisplay').textContent=gameId;
+    show('hostStartWrap'); hide('waitHint');
+    showScreen('waiting');
+    listenMP(db);
+  }
+
+  async function joinMP() {
+    var db = initFB(); if (!db) return;
+    var name=ge('joinName').value.trim(), code=ge('joinCode').value.trim().toUpperCase();
+    if (!name) { showToast('Enter your name'); return; }
+    if (code.length<4) { showToast('Enter a valid code'); return; }
+    myName=name; myId=genUid(); isHost=false; gameId=code;
+    var snap=await db.collection('hl_games').doc(gameId).get();
+    if (!snap.exists) { showToast('Game not found!'); return; }
+    await db.collection('hl_games').doc(gameId).update({
+      players: firebase.firestore.FieldValue.arrayUnion({id:myId,name:name,streak:0,lastStreak:0,best:0})
+    });
+    ge('codeDisplay').textContent=gameId;
+    showScreen('waiting');
+    listenMP(db);
+  }
+
+  function listenMP(db) {
+    if (gameUnsub) gameUnsub();
+    gameUnsub = db.collection('hl_games').doc(gameId).onSnapshot(function(snap){
+      if (!snap.exists) return;
+      renderMP(snap.data(), db);
+    });
+  }
+
+  async function hostStartMP() {
+    var db=initFB(); if (!db) return;
+    await db.collection('hl_games').doc(gameId).update({phase:'playing'});
+  }
+
+  function renderMP(data, db) {
+    if (data.phase==='waiting') {
+      showScreen('waiting');
+      var chips='';
+      (data.players||[]).forEach(function(p){ chips+='<div class="pchip">'+p.name+'</div>'; });
+      ge('waitingPlayers').innerHTML=chips;
+      return;
+    }
+    showScreen('game');
+    hide('gameoverPanel'); hide('passScreen'); hide('resultFlash'); hide('deckEndScreen');
+    var players=data.players||[], curIdx=data.currentIdx||0;
+    var curPlayer=players[curIdx]||{}, isMyTurn=(curPlayer.id===myId);
+    ge('currName').textContent=curPlayer.name||'\u2014';
+    ge('deckCt').textContent=(data.deck||[]).length+' cards left';
+    renderCard(ge('currentCard'),data.currentCard,false);
+    renderBoard(players,curIdx,myId);
+    updateStreak(curPlayer.streak||0,curPlayer.best||0);
+
+    if (data.phase==='gameover') {
+      hide('guessBtns'); hide('waitTurn'); hide('passBtn'); show('gameoverPanel');
+      var best2=0; players.forEach(function(p){ if(p.best>best2) best2=p.best; });
+      var w2=players.filter(function(p){return p.best===best2;});
+      ge('goWinner').textContent=w2.length===1?'\uD83C\uDF89 '+w2[0].name+' wins!':"It's a tie! \uD83E\uDD1D";
+      ge('goScores').innerHTML=buildGoScores(players,myId);
+      return;
+    }
+    if (data.phase==='passing') {
+      hide('guessBtns'); hide('waitTurn'); hide('passBtn'); show('passScreen');
+      var passer=players[data.passerIdx]||{};
+      ge('psEmoji').textContent='\uD83E\uDD1D';
+      ge('psTitle').textContent='Passed!'; ge('psTitle').style.color='var(--yellow)';
+      ge('psSub').textContent=passer.name+' passed with a streak of '+(data.passerStreak||0)+'!';
+      var nextIdx2=(data.passerIdx+1)%players.length, btn=ge('psBtn');
+      if (isHost) {
+        btn.textContent='Next: '+(players[nextIdx2]||{}).name+' \u2192'; btn.disabled=false;
+        btn.onclick=function(){ mpAdvancePass(data,nextIdx2,db); };
+      } else { btn.textContent='Waiting for host\u2026'; btn.disabled=true; }
+      return;
+    }
+    if (data.phase==='deckend') {
+      hide('guessBtns'); hide('waitTurn'); hide('passBtn'); show('deckEndScreen');
+      ge('deMsg').textContent=(curPlayer.name||'?')+' cleared the deck! Streak: '+(curPlayer.streak||0)+' \uD83D\uDD25';
+      var cb=ge('deContBtn'), eb=ge('deEndBtn');
+      if (isHost) {
+        cb.disabled=false; cb.textContent='\uD83D\uDD04 Continue Game';
+        cb.onclick=function(){ mpContinueDeck(data,db); };
+        eb.disabled=false; eb.textContent='\uD83C\uDFC6 End Game & See Results';
+        eb.onclick=function(){ mpEndGame(db); };
+      } else {
+        cb.disabled=true; cb.textContent='Waiting for host\u2026';
+        eb.disabled=true; eb.textContent='Waiting for host\u2026';
+      }
+      return;
+    }
+    // Playing
+    hide('passScreen'); hide('deckEndScreen');
+    renderFaceDown(ge('nextCard')); mpLocked=false;
+    if (isMyTurn) {
+      show('guessBtns'); hide('waitTurn'); setGD(false);
+      if ((curPlayer.streak||0)>=PASS_AT && players.length>1) show('passBtn'); else hide('passBtn');
+    } else {
+      hide('guessBtns'); hide('passBtn'); show('waitTurn');
+      ge('waitName').textContent=curPlayer.name||'\u2014';
+    }
+  }
+
+  async function mpGuess(dir) {
+    if (mpLocked) return;
+    var db=initFB(); if (!db) return;
+    mpLocked=true; setGD(true); hide('passBtn');
+    var snap=await db.collection('hl_games').doc(gameId).get();
+    var data=snap.data();
+    var players=data.players.map(function(p){return Object.assign({},p);});
+    var curIdx=data.currentIdx, deck=data.deck.slice();
+    if (!deck.length) return;
+    var nextStr=deck.pop();
+    renderCard(ge('nextCard'),nextStr,true);
+    var curVal=VAL[parseCard(data.currentCard).r], nextVal=VAL[parseCard(nextStr).r];
+    var correct=(dir==='higher')?(nextVal>curVal):(nextVal<curVal);
+    setTimeout(async function(){
+      var p=players[curIdx];
+      if (correct) {
+        p.streak++; if(p.streak>p.best) p.best=p.streak; players[curIdx]=p;
+        flashResult(true,'\u2713 Correct! Streak: '+p.streak+' \uD83D\uDD25');
+        if (deck.length===0) {
+          await db.collection('hl_games').doc(gameId).update({players:players,deck:deck,currentCard:nextStr,phase:'deckend'});
+        } else {
+          await db.collection('hl_games').doc(gameId).update({players:players,deck:deck,currentCard:nextStr});
+        }
+      } else {
+        var c=parseCard(nextStr);
+        p.lastStreak=p.streak; p.streak=0; players[curIdx]=p;
+        flashResult(false,(nextVal===curVal)?'\uD83D\uDCA5 Equal card \u2014 bust!':'\uD83D\uDCA5 Wrong! It was '+c.r+SYM[c.s]);
+        setTimeout(async function(){
+          await db.collection('hl_games').doc(gameId).update({players:players,deck:deck,currentCard:nextStr,phase:'playing'});
+        },900);
+      }
+    },380);
+  }
+
+  async function mpPassTurn() {
+    var db=initFB(); if (!db) return;
+    var snap=await db.collection('hl_games').doc(gameId).get();
+    var data=snap.data();
+    var players=data.players.map(function(p){return Object.assign({},p);});
+    var curIdx=data.currentIdx, p=players[curIdx];
+    p.lastStreak=p.streak; players[curIdx]=p;
+    await db.collection('hl_games').doc(gameId).update({players:players,phase:'passing',passerIdx:curIdx,passerStreak:p.lastStreak});
+  }
+
+  async function mpAdvancePass(data,nextIdx,db) {
+    var players=data.players.map(function(p){return Object.assign({},p);});
+    players[nextIdx].streak=0;
+    // Keep same deck — do NOT reset on pass
+    await db.collection('hl_games').doc(gameId).update({
+      players:players, currentIdx:nextIdx, phase:'playing', passerIdx:null, passerStreak:null
+    });
+  }
+
+  async function mpContinueDeck(data,db) {
+    var newDeck=freshDeckMinus(data.currentCard);
+    await db.collection('hl_games').doc(gameId).update({deck:newDeck,currentCard:data.currentCard,phase:'playing'});
+  }
+
+  async function mpEndGame(db) {
+    await db.collection('hl_games').doc(gameId).update({phase:'gameover'});
+  }
+
+</script>
+</body>
+</html>
