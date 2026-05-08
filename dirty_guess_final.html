@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dirty Guess</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #1a1a1a; min-height: 100vh; }
+.app { max-width: 500px; margin: 0 auto; padding: 1rem; }
+.screen { display: none; }
+.screen.active { display: block; }
+.card { background: #fff; border: 1px solid #e5e5e5; border-radius: 16px; padding: 1.5rem; margin-bottom: 1rem; }
+h1 { font-size: 24px; font-weight: 700; margin-bottom: 0.25rem; }
+h2 { font-size: 18px; font-weight: 600; margin-bottom: 0.75rem; }
+.subtitle { font-size: 14px; color: #666; margin-bottom: 1.25rem; }
+input[type="text"] { width: 100%; padding: 0.75rem 1rem; font-size: 16px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 0.75rem; outline: none; background: #fff; color: #1a1a1a; transition: border-color 0.15s; }
+input[type="text"]:focus { border-color: #4f8ef7; }
+.btn { display: block; width: 100%; padding: 0.875rem; font-size: 16px; font-weight: 500; border: 1px solid #ddd; border-radius: 10px; background: #fff; color: #1a1a1a; cursor: pointer; margin-top: 0.75rem; transition: background 0.1s; text-align: center; }
+.btn:hover { background: #f5f5f5; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary { background: #4f8ef7; border-color: #4f8ef7; color: #fff; }
+.btn-primary:hover { background: #3a7de8; }
+.btn-subtle { border-color: #eee; color: #999; font-size: 14px; }
+.badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; background: #f0f0f0; color: #666; margin-bottom: 0.75rem; }
+.scoreboard { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+.score-cell { background: #f5f5f5; border-radius: 12px; padding: 0.75rem 1rem; text-align: center; border: 1px solid transparent; }
+.score-cell.active { background: #eef4ff; border-color: #c0d8ff; }
+.score-name { font-size: 12px; color: #888; margin-bottom: 4px; }
+.score-val { font-size: 28px; font-weight: 700; color: #1a1a1a; }
+.score-cell.active .score-name { color: #4f8ef7; }
+.score-cell.active .score-val { color: #4f8ef7; }
+.round-q { font-size: 17px; line-height: 1.55; color: #1a1a1a; margin: 0.75rem 0 1.25rem; min-height: 72px; }
+.opt-btn { display: block; width: 100%; text-align: left; background: #f5f5f5; border: 1px solid #e5e5e5; border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 8px; font-size: 15px; color: #1a1a1a; cursor: pointer; transition: all 0.1s; }
+.opt-btn:hover { border-color: #bbb; background: #efefef; }
+.opt-btn.chosen { background: #eef4ff; border-color: #4f8ef7; color: #2563eb; }
+.opt-btn:disabled { cursor: default; opacity: 0.7; }
+.waiting { text-align: center; padding: 2.5rem 1rem; }
+.waiting-spinner { font-size: 36px; margin-bottom: 1rem; display: inline-block; animation: spin 2s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.waiting-name { font-size: 18px; font-weight: 700; margin-bottom: 0.4rem; }
+.waiting-msg { font-size: 14px; color: #888; }
+.mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
+.mode-card { background: #f5f5f5; border: 1px solid #e5e5e5; border-radius: 14px; padding: 1rem; cursor: pointer; text-align: center; transition: all 0.15s; }
+.mode-card:hover { border-color: #bbb; }
+.mode-card.selected { border: 2px solid #4f8ef7; background: #eef4ff; }
+.mode-icon { font-size: 28px; margin-bottom: 6px; }
+.mode-label { font-size: 14px; font-weight: 700; }
+.mode-desc { font-size: 12px; color: #888; margin-top: 3px; }
+.progress-bar { height: 4px; background: #f0f0f0; border-radius: 2px; margin-bottom: 1rem; overflow: hidden; }
+.progress-fill { height: 100%; background: #4f8ef7; border-radius: 2px; transition: width 0.4s; }
+.room-code { font-size: 56px; font-weight: 800; letter-spacing: 0.18em; text-align: center; padding: 1rem 0 0.5rem; }
+.room-code-hint { font-size: 13px; color: #888; text-align: center; margin-bottom: 1rem; }
+.code-input { font-size: 28px !important; letter-spacing: 0.2em; text-align: center; text-transform: uppercase; font-weight: 700; }
+.result-correct { color: #1a7a3a; font-weight: 700; }
+.result-wrong { color: #c0392b; font-weight: 700; }
+.result-big { font-size: 16px; line-height: 1.6; }
+hr { border: none; border-top: 1px solid #eee; margin: 1rem 0; }
+.error-msg { font-size: 13px; color: #e74c3c; margin-top: 0.5rem; min-height: 1.2em; }
+.chat-panel { margin-top: 0.75rem; border: 1px solid #e5e5e5; border-radius: 16px; overflow: hidden; background: #fff; }
+.chat-header { padding: 0.65rem 1rem; background: #f5f5f5; font-size: 13px; font-weight: 600; color: #666; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
+.chat-header-left { display: flex; align-items: center; gap: 8px; }
+.chat-unread { display: none; background: #ff3b30; color: #fff; font-size: 11px; font-weight: 700; border-radius: 10px; padding: 1px 7px; }
+.chat-body { display: none; }
+.chat-body.open { display: block; }
+.chat-messages { height: 160px; overflow-y: auto; padding: 0.75rem 1rem; display: flex; flex-direction: column; gap: 8px; background: #fff; }
+.chat-empty { text-align: center; font-size: 13px; color: #ccc; margin: auto; padding: 1rem 0; }
+.chat-msg { max-width: 82%; padding: 0.5rem 0.75rem; border-radius: 14px; font-size: 14px; line-height: 1.4; }
+.chat-msg.mine { align-self: flex-end; background: #4f8ef7; color: #fff; border-bottom-right-radius: 4px; }
+.chat-msg.theirs { align-self: flex-start; background: #f0f0f0; color: #1a1a1a; border-bottom-left-radius: 4px; }
+.chat-msg .msg-sender { font-size: 10px; opacity: 0.6; margin-bottom: 2px; }
+.chat-quick { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 0.75rem; background: #f9f9f9; border-top: 1px solid #eee; }
+.chat-quick button { background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 0.5rem 0.6rem; font-size: 13px; color: #1a1a1a; cursor: pointer; text-align: left; line-height: 1.35; transition: background 0.1s; }
+.chat-quick button:hover { background: #f0f0f0; }
+.chat-quick button:last-child { grid-column: 1 / -1; }
+@media (prefers-color-scheme: dark) {
+  body { background: #111; color: #f0f0f0; }
+  .card { background: #1e1e1e; border-color: #2e2e2e; }
+  h1, h2, .round-q, .waiting-name, .score-val, .room-code { color: #f0f0f0; }
+  .subtitle, .waiting-msg, .score-name, .room-code-hint { color: #888; }
+  input[type="text"] { background: #2a2a2a; border-color: #3a3a3a; color: #f0f0f0; }
+  input[type="text"]:focus { border-color: #4f8ef7; }
+  .btn { background: #1e1e1e; border-color: #3a3a3a; color: #f0f0f0; }
+  .btn:hover { background: #2a2a2a; }
+  .btn-primary { background: #4f8ef7; border-color: #4f8ef7; color: #fff; }
+  .btn-primary:hover { background: #3a7de8; }
+  .btn-subtle { color: #555; border-color: #2a2a2a; }
+  .score-cell { background: #2a2a2a; }
+  .score-cell.active { background: #162040; border-color: #2a4a8a; }
+  .opt-btn { background: #2a2a2a; border-color: #3a3a3a; color: #f0f0f0; }
+  .opt-btn:hover { background: #333; border-color: #555; }
+  .opt-btn.chosen { background: #162040; border-color: #4f8ef7; color: #7ab0ff; }
+  .mode-card { background: #2a2a2a; border-color: #3a3a3a; }
+  .mode-card.selected { background: #162040; border-color: #4f8ef7; }
+  .mode-label { color: #f0f0f0; }
+  .mode-desc { color: #888; }
+  .progress-bar { background: #2a2a2a; }
+  .badge { background: #2a2a2a; color: #888; }
+  hr { border-color: #2a2a2a; }
+  .chat-panel { background: #1e1e1e; border-color: #2e2e2e; }
+  .chat-header { background: #2a2a2a; color: #888; }
+  .chat-messages { background: #1e1e1e; }
+  .chat-msg.theirs { background: #2a2a2a; color: #f0f0f0; }
+  .chat-quick { background: #161616; border-color: #2a2a2a; }
+  .chat-quick button { background: #1e1e1e; border-color: #2e2e2e; color: #f0f0f0; }
+  .chat-quick button:hover { background: #2a2a2a; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div id="lobby-screen" class="screen active">
+    <div class="card">
+      <h1>🔥 Dirty Guess</h1>
+      <p class="subtitle">Two phones, one game.</p>
+      <input type="text" id="my-name" placeholder="Your name" maxlength="20" />
+      <button class="btn btn-primary" onclick="createRoom()">Create a room</button>
+      <hr>
+      <input type="text" id="join-code" placeholder="Room code" class="code-input" maxlength="4" oninput="this.value=this.value.toUpperCase()" />
+      <button class="btn" onclick="joinRoom()">Join room</button>
+      <div class="error-msg" id="lobby-error"></div>
+    </div>
+  </div>
+
+  <div id="waiting-screen" class="screen">
+    <div class="card">
+      <h2>Room created!</h2>
+      <p class="subtitle">Share this code with your partner:</p>
+      <div class="room-code" id="show-code"></div>
+      <p class="room-code-hint" id="guest-status">Waiting for them to join...</p>
+      <h2 style="margin-top:1.25rem;">Pick a mode</h2>
+      <div class="mode-cards">
+        <div class="mode-card selected" id="mc-playful" onclick="hostSelectMode('playful')">
+          <div class="mode-icon">😄</div><div class="mode-label">Playful</div><div class="mode-desc">Funny situations</div>
+        </div>
+        <div class="mode-card" id="mc-spicy" onclick="hostSelectMode('spicy')">
+          <div class="mode-icon">🌶️</div><div class="mode-label">Spicy</div><div class="mode-desc">Dirty situations</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="start-btn" onclick="hostStartGame()" disabled>Start game</button>
+    </div>
+    <div id="chat-wait"></div>
+  </div>
+
+  <div id="joined-screen" class="screen">
+    <div class="card waiting">
+      <div class="waiting-spinner">⏳</div>
+      <div class="waiting-name" id="joined-msg"></div>
+      <div class="waiting-msg">Waiting for the host to start...</div>
+    </div>
+    <div id="chat-joined"></div>
+  </div>
+
+  <div id="answer-screen" class="screen">
+    <div class="scoreboard" id="sb-answer"></div>
+    <div class="card">
+      <div class="badge" id="badge-answer"></div>
+      <div class="progress-bar"><div class="progress-fill" id="prog-answer"></div></div>
+      <div class="round-q" id="q-answer"></div>
+      <div id="opts-answer"></div>
+      <button class="btn btn-primary" id="lock-btn" onclick="lockAnswer()" disabled>Lock in my answer</button>
+    </div>
+    <div id="chat-answer"></div>
+  </div>
+
+  <div id="partner-answering-screen" class="screen">
+    <div class="scoreboard" id="sb-partans"></div>
+    <div class="card waiting">
+      <div class="waiting-spinner">🤔</div>
+      <div class="waiting-name" id="partans-name"></div>
+      <div class="waiting-msg">is picking their answer...</div>
+    </div>
+    <div id="chat-partans"></div>
+  </div>
+
+  <div id="guess-screen" class="screen">
+    <div class="scoreboard" id="sb-guess"></div>
+    <div class="card">
+      <div class="badge" id="badge-guess"></div>
+      <div class="round-q" id="q-guess"></div>
+      <div id="opts-guess"></div>
+    </div>
+    <div id="chat-guess"></div>
+  </div>
+
+  <div id="partner-guessing-screen" class="screen">
+    <div class="scoreboard" id="sb-partguess"></div>
+    <div class="card waiting">
+      <div class="waiting-spinner">🕵️</div>
+      <div class="waiting-name" id="partguess-name"></div>
+      <div class="waiting-msg">is making their guess...</div>
+    </div>
+    <div id="chat-partguess"></div>
+  </div>
+
+  <div id="reveal-screen" class="screen">
+    <div class="scoreboard" id="sb-reveal"></div>
+    <div class="card" style="text-align:center;">
+      <div style="font-size:44px;margin-bottom:0.75rem;" id="reveal-icon"></div>
+      <div class="result-big" id="reveal-msg"></div>
+      <div style="font-size:13px;color:#888;margin-top:0.75rem;font-style:italic;" id="reveal-q"></div>
+    </div>
+    <button class="btn btn-primary" id="next-btn" onclick="hostNextRound()" style="display:none;">Next round ▶</button>
+    <div id="waiting-next" style="text-align:center;font-size:14px;color:#888;margin-top:0.75rem;display:none;">Waiting for host to start next round...</div>
+    <button class="btn btn-subtle" onclick="leaveGame()" style="margin-top:6px;">Leave game</button>
+    <div id="chat-reveal"></div>
+  </div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCP4vD87Kp7ni9WQ4IIOoPIZKgAo_NPE_g",
+  authDomain: "proctor-bingo.firebaseapp.com",
+  databaseURL: "https://proctor-bingo-default-rtdb.firebaseio.com",
+  projectId: "proctor-bingo",
+  storageBucket: "proctor-bingo.firebasestorage.app",
+  messagingSenderId: "272737958124",
+  appId: "1:272737958124:web:0478173133503029f58dc9"
+};
+
+const db = getDatabase(initializeApp(firebaseConfig));
+
+const playfulQ = [
+  { q: "You get stuck in an elevator for an hour. What's most likely?", options: ["Panic and push every button","Make out like teenagers","Tell embarrassing stories","Attempt sneaky sex"] },
+  { q: "You're both drunk at a wedding and the dance floor is empty. What happens?", options: ["Do the worm","Dirty dance together","Steal the cake and run","Start a conga line"] },
+  { q: "A genie gives you one night with zero consequences. What do you do?", options: ["Wild public adventure","Eat everything naked","Prank all your friends","Stay home and watch TV"] },
+  { q: "You wake up and you've swapped bodies for the day. First thing?", options: ["Feel yourself up","Go cause chaos at work","Make the other one do chores","Call your parents"] },
+  { q: "You're both locked out of the house naked after a shower. Plan?", options: ["Hide in the bushes","Break a window dramatically","Call a neighbor embarrassed","Have outdoor fun while waiting"] },
+  { q: "You find a bottle labeled 'Truth Serum'. What do you do?", options: ["Both drink it","Make the other drink it","Pour it out","Save it for later"] },
+  { q: "You're at a fancy restaurant and someone thinks you're famous. Do you...?", options: ["Play along all night","Immediately correct them","Get free dessert first","Ask your partner to film it"] },
+  { q: "Your partner's phone goes off 10 times at 3am. What do you do?", options: ["Ignore it and sleep","Check it for them","Throw it across the room","Pretend you're asleep"] },
+  { q: "You win $500 together. How do you spend it?", options: ["Split it 50/50","Romantic weekend trip","New gadget for the house","Blow it on a fancy dinner"] },
+  { q: "What's more likely to start a silly argument?", options: ["What to watch on TV","How to load the dishwasher","Who ate the last snack","The thermostat"] },
+  { q: "You're both running late. Who's to blame?", options: ["Me, definitely","My partner, definitely","Neither, it's circumstance","We both know the real answer"] },
+  { q: "Your ideal lazy Sunday involves...?", options: ["Staying in bed all day","Brunch then a nap","A long walk then cooking","Actually getting things done"] },
+  { q: "You're at a party. Where is your partner most likely?", options: ["Right next to me all night","Across the room making friends","In the kitchen eating snacks","Already in the car ready to go"] },
+  { q: "A power outage hits for the whole day. What are you two doing?", options: ["Board games by candlelight","Having a lot of sex","Walking around the neighborhood","Driving somewhere with power"] },
+  { q: "Your partner asks you to pick a movie. You pick...?", options: ["Something they'll actually enjoy","My absolute favorite","Whatever got the best reviews","Something neither of us has seen"] },
+  { q: "You're both tipsy and find a karaoke bar. What happens?", options: ["Duet immediately","Watch others, too shy","Do it solo and embarrass yourself","Drag your partner up against their will"] },
+  { q: "Your love language is...?", options: ["Physical touch","Quality time","Acts of service","Words of affirmation"] },
+  { q: "If your relationship was a movie genre it would be...?", options: ["Romantic comedy","Action thriller","Steamy drama","Documentary — very real, very raw"] },
+  { q: "How do you handle a fight before bed?", options: ["Never sleep angry — talk it out","Sleep on it and revisit tomorrow","Makeup sex solves everything","Silent treatment until someone cracks"] },
+  { q: "Your partner surprises you with a weekend trip. You assume it's...?", options: ["A romantic getaway","An adventure activity","A city trip for food and culture","Something completely wild"] },
+];
+
+const spicyQ = [
+  { q: "You're both in a taxi at night with a distracted driver. What happens?", options: ["Keep it PG","Heavy making out","Sneaky hand stuff","Try to stay quiet all the way home"] },
+  { q: "You're house-sitting a mansion alone together. What do you do?", options: ["Behave perfectly","Do it in every room","Skinny dip in the pool","Have the loudest sex possible"] },
+  { q: "Trapped in a dark closet during a game. What's most likely?", options: ["Stay quiet and wait","Start making out","Fast standing sex","Just laugh the whole time"] },
+  { q: "You're both worked up in a public park at dusk. What do you risk?", options: ["Just kiss","Find a corner for something more","Go home immediately","Full on behind a tree"] },
+  { q: "Power goes out in a heatwave and you're both sweaty. What happens?", options: ["Complain about the heat","Start grinding","Slippery sweaty sex","Shower together to cool down"] },
+  { q: "Empty dressing room together at a store. What's most tempting?", options: ["Just try clothes on","Quick makeout","Risky oral","Full on against the mirror"] },
+  { q: "How do you most often initiate?", options: ["Drop a clear hint","Just go for it directly","Wait for them to start","Make it obvious but act accidental"] },
+  { q: "It's 2am and neither of you can sleep. What happens?", options: ["Scroll phones separately","Start talking about life","Have sex","Raid the fridge together"] },
+  { q: "Your partner says 'I have a surprise for tonight'. What do you assume?", options: ["Something sweet and romantic","Something sexy","A new restaurant or plan","Honestly no idea"] },
+  { q: "What's the fastest way to turn you on?", options: ["A specific look","A whispered suggestion","Physical touch in passing","A text earlier in the day"] },
+  { q: "You're both tipsy on vacation. What's the night ending with?", options: ["Wild passionate sex","Laughing until you fall asleep","A deep conversation on the balcony","Room service and passing out"] },
+  { q: "How do you feel about being loud?", options: ["Naturally loud, no apologies","Quiet by default","Depends on the situation","Whatever gets the reaction I want"] },
+  { q: "Full day with no obligations. What do you actually want?", options: ["Stay in bed the whole time","Go on an adventure together","Alternate between both","Just sleep honestly"] },
+  { q: "Most daring place you'd actually go through with it?", options: ["Car in a parking lot","Balcony after dark","Somewhere you'd never normally admit","Nowhere risky, home is fine"] },
+  { q: "Most likely reason you haven't done something you've both talked about?", options: ["Timing was never right","One of us got shy","Life got in the way","We forgot we said that"] },
+  { q: "You find your partner's search history. What's the most likely surprise?", options: ["A gift they're planning for you","Something spicy they want to try","A weird niche hobby","Absolutely nothing surprising"] },
+  { q: "Your ideal night in involves...?", options: ["Long slow session, no rush","Quick and intense","Something new you haven't tried","Cuddling, honestly"] },
+  { q: "What's something you want more of?", options: ["Spontaneity","Slow intimacy","Dirty talk","More adventurous locations"] },
+  { q: "You're both showering together. What actually happens?", options: ["It stays innocent","It gets steamy fast","Someone uses all the hot water","Starts innocent, escalates"] },
+  { q: "How adventurous are you, really?", options: ["Pretty vanilla and proud","Open to most things","Will try anything once","Already done things I won't say here"] },
+];
+
+const quickReplies = [
+  { label: "😏 That's what she said",       text: "That's what she said 😏" },
+  { label: "🥵 That turned me on",           text: "That answer actually turned me on 🥵" },
+  { label: "👅 You'll get it later",          text: "Keep playing like that and you'll get a reward later 👅" },
+  { label: "🍑 I know exactly why",           text: "Oh I know EXACTLY why you picked that 🍑" },
+  { label: "🔥 We're finishing this in bed",  text: "We are absolutely finishing this game in bed 🔥" },
+];
+
+let myName = '', myRole = '', roomCode = '';
+let selectedAnswerIdx = -1, seenMsgCount = 0, lastChatLen = 0;
+let stateUnsub = null, chatUnsub = null, lastPhaseKey = null;
+const chatIds = ['chat-wait','chat-joined','chat-answer','chat-partans','chat-guess','chat-partguess','chat-reveal'];
+
+const roomRef = c => ref(db, 'rooms/' + c.toUpperCase());
+const chatRef = c => ref(db, 'chats/' + c.toUpperCase());
+
+async function getState() {
+  try { const s = await get(roomRef(roomCode)); return s.exists() ? s.val() : null; } catch(e) { return null; }
+}
+async function saveState(state) { await set(roomRef(roomCode), state); }
+
+function subscribeAll() {
+  unsubAll();
+  stateUnsub = onValue(roomRef(roomCode), s => { if (s.exists()) handleState(s.val()); });
+  chatUnsub  = onValue(chatRef(roomCode),  s => { handleChat(s.exists() ? s.val() : []); });
+}
+function unsubAll() {
+  if (stateUnsub) { stateUnsub(); stateUnsub = null; }
+  if (chatUnsub)  { chatUnsub();  chatUnsub  = null; }
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  chatIds.forEach(cid => { const el = document.getElementById(cid); if (el && !el.innerHTML) buildChat(cid); });
+}
+function lobbyErr(m) { document.getElementById('lobby-error').textContent = m; }
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function sbHTML(state, active) {
+  return ['host','guest'].map((r,i) => `
+    <div class="score-cell ${r===active?'active':''}">
+      <div class="score-name">${[state.host||'Host', state.guest||'Waiting...'][i]}</div>
+      <div class="score-val">${state.scores[r]}</div>
+    </div>`).join('');
+}
+
+window.createRoom = async function() {
+  myName = document.getElementById('my-name').value.trim();
+  if (!myName) { lobbyErr('Enter your name first.'); return; }
+  const code = Math.floor(1000+Math.random()*9000).toString();
+  roomCode = code; myRole = 'host';
+  const shuffled = shuffle([...Array(playfulQ.length).keys()]);
+  const state = { code, host: myName, guest: null, mode: 'playful', phase: 'lobby', round: 0,
+    scores: {host:0,guest:0}, answererRole: 'host', currentQIdx: shuffled[0],
+    questionOrder: shuffled, usedCount: 1, realAnswer: null, guessAnswer: null, lastUpdated: Date.now() };
+  await set(roomRef(code), state);
+  await set(chatRef(code), []);
+  document.getElementById('show-code').textContent = code;
+  document.getElementById('start-btn').disabled = true;
+  document.getElementById('guest-status').textContent = 'Waiting for them to join...';
+  seenMsgCount = 0; lastChatLen = 0; lastPhaseKey = null;
+  showScreen('waiting-screen');
+  subscribeAll();
+};
+
+window.joinRoom = async function() {
+  myName = document.getElementById('my-name').value.trim();
+  const code = document.getElementById('join-code').value.trim().toUpperCase();
+  if (!myName) { lobbyErr('Enter your name first.'); return; }
+  if (code.length !== 4) { lobbyErr('Enter a 4-digit room code.'); return; }
+  let state;
+  try { const s = await get(roomRef(code)); if (!s.exists()) { lobbyErr('Room not found.'); return; } state = s.val(); }
+  catch(e) { lobbyErr('Connection error. Check your internet.'); return; }
+  if (state.guest) { lobbyErr('Room is full.'); return; }
+  if (state.phase !== 'lobby') { lobbyErr('Game already in progress.'); return; }
+  roomCode = code; myRole = 'guest';
+  state.guest = myName; state.lastUpdated = Date.now();
+  await set(roomRef(code), state);
+  document.getElementById('joined-msg').textContent = 'Joined ' + state.host + '\u2019s room!';
+  seenMsgCount = 0; lastChatLen = 0; lastPhaseKey = null;
+  showScreen('joined-screen');
+  subscribeAll();
+};
+
+window.hostSelectMode = function(mode) {
+  document.getElementById('mc-playful').classList.toggle('selected', mode==='playful');
+  document.getElementById('mc-spicy').classList.toggle('selected', mode==='spicy');
+};
+
+window.hostStartGame = async function() {
+  const state = await getState();
+  if (!state || !state.guest) return;
+  const mode = document.getElementById('mc-spicy').classList.contains('selected') ? 'spicy' : 'playful';
+  const pool = mode === 'playful' ? playfulQ : spicyQ;
+  const shuffled = shuffle([...Array(pool.length).keys()]);
+  Object.assign(state, { mode, phase: 'answering', round: 1, answererRole: 'host',
+    realAnswer: null, guessAnswer: null, questionOrder: shuffled, currentQIdx: shuffled[0],
+    usedCount: 1, lastUpdated: Date.now() });
+  await saveState(state);
+};
+
+window.hostNextRound = async function() {
+  const state = await getState(); if (!state) return;
+  const pool = state.mode === 'playful' ? playfulQ : spicyQ;
+  if (state.usedCount >= pool.length) { state.questionOrder = shuffle([...Array(pool.length).keys()]); state.usedCount = 0; }
+  Object.assign(state, { currentQIdx: state.questionOrder[state.usedCount], usedCount: state.usedCount+1,
+    round: state.round+1, answererRole: state.answererRole==='host'?'guest':'host',
+    phase: 'answering', realAnswer: null, guessAnswer: null, lastUpdated: Date.now() });
+  await saveState(state);
+};
+
+window.lockAnswer = async function() {
+  if (selectedAnswerIdx === -1) return;
+  const state = await getState(); if (!state) return;
+  state.realAnswer = selectedAnswerIdx; state.phase = 'guessing'; state.lastUpdated = Date.now();
+  await saveState(state);
+};
+
+async function submitGuess(idx) {
+  const state = await getState(); if (!state) return;
+  const gr = state.answererRole === 'host' ? 'guest' : 'host';
+  if (idx === state.realAnswer) state.scores[gr]++;
+  Object.assign(state, { guessAnswer: idx, phase: 'reveal', lastUpdated: Date.now() });
+  await saveState(state);
+}
+
+window.leaveGame = async function() {
+  unsubAll(); lastPhaseKey = null;
+  try { await remove(roomRef(roomCode)); } catch(e) {}
+  try { await remove(chatRef(roomCode)); } catch(e) {}
+  showScreen('lobby-screen');
+};
+
+function handleState(state) {
+  const host     = myRole === 'host';
+  const answerer = (host && state.answererRole==='host') || (!host && state.answererRole==='guest');
+  const partner  = host ? state.guest : state.host;
+  const pool     = state.mode === 'playful' ? playfulQ : spicyQ;
+  const q        = pool[state.currentQIdx];
+
+  if (state.phase === 'lobby' && host) {
+    if (state.guest) {
+      document.getElementById('start-btn').disabled = false;
+      document.getElementById('start-btn').textContent = state.guest + ' joined! Start game ▶';
+      document.getElementById('guest-status').textContent = '✅ ' + state.guest + ' has joined!';
+    }
+    return;
+  }
+
+  const pk = state.phase+'-'+state.round+'-'+state.answererRole;
+  if (pk === lastPhaseKey) return;
+  lastPhaseKey = pk; selectedAnswerIdx = -1;
+
+  if (state.phase === 'answering') {
+    if (answerer) {
+      document.getElementById('badge-answer').textContent = 'Round '+state.round+' · Your turn to answer';
+      document.getElementById('prog-answer').style.width = Math.min((state.round/20)*100,100)+'%';
+      document.getElementById('q-answer').textContent = q.q;
+      document.getElementById('sb-answer').innerHTML = sbHTML(state, myRole);
+      const cont = document.getElementById('opts-answer');
+      cont.innerHTML = ''; selectedAnswerIdx = -1; document.getElementById('lock-btn').disabled = true;
+      q.options.forEach((opt,i) => {
+        const b = document.createElement('button'); b.className='opt-btn'; b.textContent=opt;
+        b.onclick = () => {
+          selectedAnswerIdx=i;
+          document.querySelectorAll('#opts-answer .opt-btn').forEach((x,j) => x.className='opt-btn'+(j===i?' chosen':''));
+          document.getElementById('lock-btn').disabled=false;
+        };
+        cont.appendChild(b);
+      });
+      showScreen('answer-screen');
+    } else {
+      document.getElementById('sb-partans').innerHTML = sbHTML(state, null);
+      document.getElementById('partans-name').textContent = partner || 'Partner';
+      showScreen('partner-answering-screen');
+    }
+  } else if (state.phase === 'guessing') {
+    if (!answerer) {
+      const an = state.answererRole==='host' ? state.host : state.guest;
+      document.getElementById('badge-guess').textContent = 'Round '+state.round+' · Guess what '+an+' picked';
+      document.getElementById('q-guess').textContent = q.q;
+      document.getElementById('sb-guess').innerHTML = sbHTML(state, myRole==='host'?'guest':'host');
+      const cont = document.getElementById('opts-guess'); cont.innerHTML = '';
+      q.options.forEach((opt,i) => {
+        const b = document.createElement('button'); b.className='opt-btn'; b.textContent=opt;
+        b.onclick = () => { document.querySelectorAll('#opts-guess .opt-btn').forEach(x=>x.disabled=true); b.className='opt-btn chosen'; submitGuess(i); };
+        cont.appendChild(b);
+      });
+      showScreen('guess-screen');
+    } else {
+      document.getElementById('sb-partguess').innerHTML = sbHTML(state, null);
+      document.getElementById('partguess-name').textContent = partner || 'Partner';
+      showScreen('partner-guessing-screen');
+    }
+  } else if (state.phase === 'reveal') {
+    const correct = state.guessAnswer === state.realAnswer;
+    const gr = state.answererRole==='host' ? 'guest' : 'host';
+    const gn = gr==='host' ? state.host : state.guest;
+    document.getElementById('sb-reveal').innerHTML = sbHTML(state, null);
+    document.getElementById('reveal-icon').textContent = correct ? '✅' : '❌';
+    document.getElementById('reveal-msg').innerHTML = correct
+      ? '<span class="result-correct">'+gn+' got it right!</span><br>'+q.options[state.realAnswer]
+      : '<span class="result-wrong">'+gn+' was wrong.</span><br>The answer was: <strong>'+q.options[state.realAnswer]+'</strong>';
+    document.getElementById('reveal-q').textContent = '\u201c'+q.q+'\u201d';
+    document.getElementById('next-btn').style.display    = host ? 'block' : 'none';
+    document.getElementById('waiting-next').style.display = host ? 'none'  : 'block';
+    showScreen('reveal-screen');
+  }
+}
+
+window.sendChatMsg = async function(text) {
+  if (!roomCode) return;
+  let msgs = [];
+  try { const s = await get(chatRef(roomCode)); if (s.exists() && Array.isArray(s.val())) msgs = s.val(); } catch(e) {}
+  msgs.push({ sender: myName, role: myRole, text, ts: Date.now() });
+  if (msgs.length > 60) msgs = msgs.slice(-60);
+  await set(chatRef(roomCode), msgs);
+};
+
+function handleChat(msgs) {
+  if (!Array.isArray(msgs)) msgs = [];
+  lastChatLen = msgs.length;
+  renderChats(msgs);
+  updateBadge(msgs);
+}
+
+function updateBadge(msgs) {
+  const unread = Math.max(0, (msgs?msgs.length:0) - seenMsgCount);
+  document.querySelectorAll('.chat-unread').forEach(el => {
+    el.textContent = unread > 0 ? String(unread) : '';
+    el.style.display = unread > 0 ? 'inline-block' : 'none';
+  });
+}
+
+function buildChat(id) {
+  const c = document.getElementById(id); if (!c) return;
+  c.innerHTML = '';
+  const p = document.createElement('div'); p.className = 'chat-panel';
+  p.innerHTML = `
+    <div class="chat-header" onclick="toggleChat('${id}')">
+      <div class="chat-header-left"><span>💬 Chat</span><span class="chat-unread"></span></div>
+      <span id="chev-${id}" style="font-size:12px;color:#aaa;">▼</span>
+    </div>
+    <div class="chat-body" id="body-${id}">
+      <div class="chat-messages" id="msgs-${id}"><div class="chat-empty">No messages yet</div></div>
+      <div class="chat-quick">
+        ${quickReplies.map(r=>`<button onclick="sendChatMsg(${JSON.stringify(r.text)})">${r.label}</button>`).join('')}
+      </div>
+    </div>`;
+  c.appendChild(p);
+}
+
+window.toggleChat = function(id) {
+  const body = document.getElementById('body-'+id);
+  const chev = document.getElementById('chev-'+id);
+  if (!body) return;
+  const open = body.classList.toggle('open');
+  if (chev) chev.textContent = open ? '▲' : '▼';
+  if (open) { seenMsgCount = lastChatLen; updateBadge(null); const m = document.getElementById('msgs-'+id); if (m) m.scrollTop = m.scrollHeight; }
+};
+
+function renderChats(msgs) {
+  if (!Array.isArray(msgs)) msgs = [];
+  chatIds.forEach(id => {
+    const el = document.getElementById(id); if (!el) return;
+    if (!el.innerHTML) buildChat(id);
+    const mc = document.getElementById('msgs-'+id); if (!mc) return;
+    mc.innerHTML = msgs.length === 0
+      ? '<div class="chat-empty">No messages yet</div>'
+      : msgs.map(m=>`<div class="chat-msg ${m.role===myRole?'mine':'theirs'}"><div class="msg-sender">${m.sender}</div>${m.text}</div>`).join('');
+    mc.scrollTop = mc.scrollHeight;
+  });
+  updateBadge(msgs);
+}
+</script>
+</body>
+</html>
