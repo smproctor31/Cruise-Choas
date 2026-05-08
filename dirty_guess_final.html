@@ -223,7 +223,13 @@ const firebaseConfig = {
   appId: "1:272737958124:web:0478173133503029f58dc9"
 };
 
-const db = getDatabase(initializeApp(firebaseConfig));
+let db;
+try {
+  const app = initializeApp(firebaseConfig);
+  db = getDatabase(app);
+} catch(e) {
+  document.getElementById('lobby-error').textContent = 'Firebase init failed: ' + e.message;
+}
 
 const playfulQ = [
   { q: "You get stuck in an elevator for an hour. What's most likely?", options: ["Panic and push every button","Make out like teenagers","Tell embarrassing stories","Attempt sneaky sex"] },
