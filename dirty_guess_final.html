@@ -389,14 +389,17 @@ function getPool(state) {
 }
 
 // ── Subscriptions ──────────────────────────────────────────────
+let activeRoomRef = null, activeChatRef = null;
 function subscribeAll() {
   unsubAll();
-  stateListener = roomRef(roomCode).on('value', snap => { if (snap.exists()) handleState(snap.val()); });
-  chatListener  = chatRef(roomCode).on('value',  snap => { handleChat(snap.exists() ? snap.val() : []); });
+  activeRoomRef = roomRef(roomCode);
+  activeChatRef = chatRef(roomCode);
+  stateListener = activeRoomRef.on('value', snap => { if (snap.exists()) handleState(snap.val()); });
+  chatListener  = activeChatRef.on('value',  snap => { handleChat(snap.exists() ? snap.val() : []); });
 }
 function unsubAll() {
-  if (stateListener) { roomRef(roomCode).off('value', stateListener); stateListener = null; }
-  if (chatListener)  { chatRef(roomCode).off('value',  chatListener);  chatListener  = null; }
+  if (stateListener && activeRoomRef) { activeRoomRef.off('value', stateListener); stateListener = null; activeRoomRef = null; }
+  if (chatListener  && activeChatRef) { activeChatRef.off('value',  chatListener);  chatListener  = null; activeChatRef = null; }
 }
 
 // ── Lobby ──────────────────────────────────────────────────────
@@ -566,9 +569,11 @@ function handleState(state) {
     return;
   }
 
-  const pk = state.phase+'-'+state.round+'-'+state.answererRole+(state.winner||'');
+  const pk = state.phase+'-'+state.round+'-'+state.answererRole+'-'+(state.winner||'');
   if (pk === lastPhaseKey) return;
-  lastPhaseKey = pk; selectedAnswerIdx = -1;
+  lastPhaseKey = pk;
+  // Only reset selectedAnswerIdx when entering a fresh answering phase
+  if (state.phase === 'answering') selectedAnswerIdx = -1;
 
   if      (state.phase==='win')      { renderWin(state,host);       showScreen('win-screen'); }
   else if (state.phase==='answering') {
