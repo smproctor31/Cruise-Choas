@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dirty Guess</title>
+<title>You Would Though</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #1a1a1a; min-height: 100vh; }
@@ -127,13 +127,13 @@ hr { border: none; border-top: 1px solid #eee; margin: 1rem 0; }
 
   <div id="lobby-screen" class="screen active">
     <div class="card">
-      <h1>🔥 Dirty Guess</h1>
+      <h1>😏 You Would Though</h1>
       <p class="subtitle">Two phones, one game. First to 5 points wins.</p>
       <input type="text" id="my-name" placeholder="Your name" maxlength="20" />
-      <button class="btn btn-primary" onclick="createRoom()">Create a room</button>
+      <button class="btn btn-primary" id="create-btn">Create a room</button>
       <hr>
-      <input type="text" id="join-code" placeholder="Room code" class="code-input" maxlength="4" oninput="this.value=this.value.toUpperCase()" />
-      <button class="btn" onclick="joinRoom()">Join room</button>
+      <input type="text" id="join-code" placeholder="Room code" class="code-input" maxlength="4" />
+      <button class="btn" id="join-btn">Join room</button>
       <div class="error-msg" id="lobby-error"></div>
     </div>
   </div>
@@ -146,14 +146,14 @@ hr { border: none; border-top: 1px solid #eee; margin: 1rem 0; }
       <p class="room-code-hint" id="guest-status">Waiting for them to join...</p>
       <h2 style="margin-top:1.25rem;">Pick a mode</h2>
       <div class="mode-cards">
-        <div class="mode-card selected" id="mc-playful" onclick="hostSelectMode('playful')">
+        <div class="mode-card selected" id="mc-playful">
           <div class="mode-icon">😄</div><div class="mode-label">Playful</div><div class="mode-desc">Funny situations</div>
         </div>
-        <div class="mode-card" id="mc-spicy" onclick="hostSelectMode('spicy')">
+        <div class="mode-card" id="mc-spicy">
           <div class="mode-icon">🌶️</div><div class="mode-label">Spicy</div><div class="mode-desc">Dirty situations</div>
         </div>
       </div>
-      <button class="btn btn-primary" id="start-btn" onclick="hostStartGame()" disabled>Start game</button>
+      <button class="btn btn-primary" id="start-btn" disabled>Start game</button>
     </div>
     <div id="chat-wait"></div>
   </div>
@@ -175,7 +175,7 @@ hr { border: none; border-top: 1px solid #eee; margin: 1rem 0; }
       <div class="progress-bar"><div class="progress-fill" id="prog-answer"></div></div>
       <div class="round-q" id="q-answer"></div>
       <div id="opts-answer"></div>
-      <button class="btn btn-primary" id="lock-btn" onclick="lockAnswer()" disabled>Lock in my answer</button>
+      <button class="btn btn-primary" id="lock-btn" disabled>Lock in my answer</button>
     </div>
     <div id="chat-answer"></div>
   </div>
@@ -224,14 +224,14 @@ hr { border: none; border-top: 1px solid #eee; margin: 1rem 0; }
     <div class="card" style="padding:1rem 1.25rem;">
       <p style="font-size:13px;font-weight:600;color:#888;margin-bottom:0.75rem;" id="q-type-label">Pick the next question type:</p>
       <div class="q-type-picker" id="q-type-picker">
-        <div class="q-type-btn selected" data-type="any" onclick="selectQType('any')">🎲 Any</div>
-        <div class="q-type-btn" data-type="playful" onclick="selectQType('playful')">😄 Playful</div>
-        <div class="q-type-btn" data-type="spicy" onclick="selectQType('spicy')">🌶️ Spicy</div>
+        <div class="q-type-btn selected" data-type="any">🎲 Any</div>
+        <div class="q-type-btn" data-type="playful">😄 Playful</div>
+        <div class="q-type-btn" data-type="spicy">🌶️ Spicy</div>
       </div>
-      <button class="btn btn-primary" id="next-btn" onclick="hostNextRound()" style="display:none;margin-top:0;">Next round ▶</button>
+      <button class="btn btn-primary" id="next-btn" style="display:none;margin-top:0;">Next round ▶</button>
       <div id="waiting-next" style="text-align:center;font-size:14px;color:#888;margin-top:0.75rem;display:none;">Waiting for host to start next round...</div>
     </div>
-    <button class="btn btn-subtle" onclick="leaveGame()" style="margin-top:0;">Leave game</button>
+    <button class="btn btn-subtle" id="leave-btn-reveal" style="margin-top:0;">Leave game</button>
     <div id="chat-reveal"></div>
   </div>
 
@@ -241,20 +241,20 @@ hr { border: none; border-top: 1px solid #eee; margin: 1rem 0; }
       <div class="win-name" id="win-name"></div>
       <div class="win-sub" id="win-sub"></div>
       <div class="final-scores" id="final-scores"></div>
-      <button class="btn btn-success" id="play-again-btn" onclick="hostPlayAgain()" style="display:none;">Play again 🔄</button>
+      <button class="btn btn-success" id="play-again-btn" style="display:none;">Play again 🔄</button>
       <div id="waiting-again" style="text-align:center;font-size:14px;color:#888;margin-top:0.75rem;display:none;">Waiting for host to start a new game...</div>
-      <button class="btn btn-subtle" onclick="leaveGame()" style="margin-top:0.5rem;">Leave game</button>
+      <button class="btn btn-subtle" id="leave-btn-win" style="margin-top:0.5rem;">Leave game</button>
     </div>
     <div id="chat-win"></div>
   </div>
 
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, get, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-const firebaseConfig = {
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+firebase.initializeApp({
   apiKey: "AIzaSyCP4vD87Kp7ni9WQ4IIOoPIZKgAo_NPE_g",
   authDomain: "proctor-bingo.firebaseapp.com",
   databaseURL: "https://proctor-bingo-default-rtdb.firebaseio.com",
@@ -262,9 +262,8 @@ const firebaseConfig = {
   storageBucket: "proctor-bingo.firebasestorage.app",
   messagingSenderId: "272737958124",
   appId: "1:272737958124:web:0478173133503029f58dc9"
-};
-
-const db = getDatabase(initializeApp(firebaseConfig));
+});
+const db = firebase.database();
 
 // ── Built-in questions ──────────────────────────────────────────
 const builtinPlayful = [
@@ -289,7 +288,6 @@ const builtinPlayful = [
   { q: "How do you handle a fight before bed?", options: ["Never sleep angry — talk it out","Sleep on it and revisit tomorrow","Makeup sex solves everything","Silent treatment until someone cracks"] },
   { q: "Your partner surprises you with a weekend trip. You assume it's...?", options: ["A romantic getaway","An adventure activity","A city trip for food and culture","Something completely wild"] },
 ];
-
 const builtinSpicy = [
   { q: "You're both in a taxi at night with a distracted driver. What happens?", options: ["Keep it PG","Heavy making out","Sneaky hand stuff","Try to stay quiet all the way home"] },
   { q: "You're house-sitting a mansion alone together. What do you do?", options: ["Behave perfectly","Do it in every room","Skinny dip in the pool","Have the loudest sex possible"] },
@@ -313,36 +311,31 @@ const builtinSpicy = [
   { q: "How adventurous are you, really?", options: ["Pretty vanilla and proud","Open to most things","Will try anything once","Already done things I won't say here"] },
 ];
 
-// ── Live question pools (built-in + custom merged) ──────────────
-let playfulQ = [...builtinPlayful];
-let spicyQ   = [...builtinSpicy];
-
-// Listen for custom questions and merge them in real time
-onValue(ref(db, 'custom_questions'), snap => {
-  const custom = snap.exists() ? Object.values(snap.val()) : [];
-  playfulQ = [...builtinPlayful, ...custom.filter(q => q.type === 'playful').map(q => ({ q: q.q, options: q.options }))];
-  spicyQ   = [...builtinSpicy,   ...custom.filter(q => q.type === 'spicy').map(q =>   ({ q: q.q, options: q.options }))];
-});
-
-// ── Chat quick replies ──────────────────────────────────────────
 const quickReplies = [
-  { label: "😂 Sure you did...",            text: "Sure you did... 😂" },
-  { label: "🤡 That's embarrassing",        text: "That is genuinely embarrassing for you 🤡" },
-  { label: "💀 Wrong and you know it",       text: "Wrong answer AND you know it 💀" },
-  { label: "🔥 That's hot!",                text: "That's hot! 🔥" },
-  { label: "😈 You'll pay for that later",   text: "Oh you are absolutely paying for that later 😈" },
+  { label: "😂 Sure you did...",           text: "Sure you did... 😂" },
+  { label: "🤡 That's embarrassing",       text: "That is genuinely embarrassing for you 🤡" },
+  { label: "💀 Wrong and you know it",      text: "Wrong answer AND you know it 💀" },
+  { label: "🔥 That's hot!",               text: "That's hot! 🔥" },
+  { label: "😈 You'll pay for that later",  text: "Oh you are absolutely paying for that later 😈" },
 ];
 
 const WIN_SCORE = 5;
 let myName = '', myRole = '', roomCode = '';
 let selectedAnswerIdx = -1, seenMsgCount = 0, lastChatLen = 0;
-let stateUnsub = null, chatUnsub = null, lastPhaseKey = null;
+let stateListener = null, chatListener = null, lastPhaseKey = null;
 let selectedQType = 'any';
+let playfulQ = [...builtinPlayful];
+let spicyQ   = [...builtinSpicy];
 const chatIds = ['chat-wait','chat-joined','chat-answer','chat-partans','chat-guess','chat-partguess','chat-reveal','chat-win'];
 
-const roomRef = c => ref(db, 'rooms/' + c.toUpperCase());
-const chatRef = c => ref(db, 'chats/' + c.toUpperCase());
+// ── Load custom questions and merge ────────────────────────────
+db.ref('custom_questions').on('value', snap => {
+  const custom = snap.exists() ? Object.values(snap.val()) : [];
+  playfulQ = [...builtinPlayful, ...custom.filter(q => q.type === 'playful').map(q => ({ q: q.q, options: q.options }))];
+  spicyQ   = [...builtinSpicy,   ...custom.filter(q => q.type === 'spicy').map(q =>   ({ q: q.q, options: q.options }))];
+});
 
+// ── Helpers ────────────────────────────────────────────────────
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
@@ -372,20 +365,8 @@ function pickQuestion(qType, usedPlayful, usedSpicy) {
   return { qIdx: pick.idx, qPool: pick.pool };
 }
 
-async function getState() {
-  try { const s = await get(roomRef(roomCode)); return s.exists() ? s.val() : null; } catch(e) { return null; }
-}
-async function saveState(state) { await set(roomRef(roomCode), state); }
-
-function subscribeAll() {
-  unsubAll();
-  stateUnsub = onValue(roomRef(roomCode), s => { if (s.exists()) handleState(s.val()); });
-  chatUnsub  = onValue(chatRef(roomCode),  s => { handleChat(s.exists() ? s.val() : []); });
-}
-function unsubAll() {
-  if (stateUnsub) { stateUnsub(); stateUnsub = null; }
-  if (chatUnsub)  { chatUnsub();  chatUnsub  = null; }
-}
+function roomRef(c)  { return db.ref('rooms/' + c.toUpperCase()); }
+function chatRef(c)  { return db.ref('chats/' + c.toUpperCase()); }
 
 function sbHTML(state, active) {
   return ['host','guest'].map((r,i) => `
@@ -400,14 +381,26 @@ function showScreen(id) {
   document.getElementById(id).classList.add('active');
   chatIds.forEach(cid => { const el = document.getElementById(cid); if (el && !el.innerHTML) buildChat(cid); });
 }
+
 function lobbyErr(m) { document.getElementById('lobby-error').textContent = m; }
 
-window.selectQType = function(type) {
-  selectedQType = type;
-  document.querySelectorAll('.q-type-btn').forEach(b => b.classList.toggle('selected', b.dataset.type === type));
-};
+function getPool(state) {
+  return (state.currentQPool || 'playful') === 'playful' ? playfulQ : spicyQ;
+}
 
-window.createRoom = async function() {
+// ── Subscriptions ──────────────────────────────────────────────
+function subscribeAll() {
+  unsubAll();
+  stateListener = roomRef(roomCode).on('value', snap => { if (snap.exists()) handleState(snap.val()); });
+  chatListener  = chatRef(roomCode).on('value',  snap => { handleChat(snap.exists() ? snap.val() : []); });
+}
+function unsubAll() {
+  if (stateListener) { roomRef(roomCode).off('value', stateListener); stateListener = null; }
+  if (chatListener)  { chatRef(roomCode).off('value',  chatListener);  chatListener  = null; }
+}
+
+// ── Lobby ──────────────────────────────────────────────────────
+document.getElementById('create-btn').addEventListener('click', function() {
   myName = document.getElementById('my-name').value.trim();
   if (!myName) { lobbyErr('Enter your name first.'); return; }
   const code = Math.floor(1000+Math.random()*9000).toString();
@@ -421,120 +414,141 @@ window.createRoom = async function() {
     realAnswer: null, guessAnswer: null, winner: null,
     nextQType: 'any', lastUpdated: Date.now()
   };
-  await set(roomRef(code), state);
-  await set(chatRef(code), []);
+  roomRef(code).set(state);
+  chatRef(code).set([]);
   document.getElementById('show-code').textContent = code;
   document.getElementById('start-btn').disabled = true;
   document.getElementById('guest-status').textContent = 'Waiting for them to join...';
   seenMsgCount = 0; lastChatLen = 0; lastPhaseKey = null;
   showScreen('waiting-screen');
   subscribeAll();
-};
+});
 
-window.joinRoom = async function() {
+document.getElementById('join-btn').addEventListener('click', function() {
   myName = document.getElementById('my-name').value.trim();
   const code = document.getElementById('join-code').value.trim().toUpperCase();
   if (!myName) { lobbyErr('Enter your name first.'); return; }
   if (code.length !== 4) { lobbyErr('Enter a 4-digit room code.'); return; }
-  let state;
-  try { const s = await get(roomRef(code)); if (!s.exists()) { lobbyErr('Room not found.'); return; } state = s.val(); }
-  catch(e) { lobbyErr('Connection error. Check your internet.'); return; }
-  if (state.guest) { lobbyErr('Room is full.'); return; }
-  if (state.phase !== 'lobby') { lobbyErr('Game already in progress.'); return; }
-  roomCode = code; myRole = 'guest';
-  state.guest = myName; state.lastUpdated = Date.now();
-  await set(roomRef(code), state);
-  document.getElementById('joined-msg').textContent = 'Joined ' + state.host + '\u2019s room!';
-  seenMsgCount = 0; lastChatLen = 0; lastPhaseKey = null;
-  showScreen('joined-screen');
-  subscribeAll();
-};
+  roomRef(code).once('value', snap => {
+    if (!snap.exists()) { lobbyErr('Room not found.'); return; }
+    const state = snap.val();
+    if (state.guest)             { lobbyErr('Room is full.'); return; }
+    if (state.phase !== 'lobby') { lobbyErr('Game already in progress.'); return; }
+    roomCode = code; myRole = 'guest';
+    state.guest = myName; state.lastUpdated = Date.now();
+    roomRef(code).set(state);
+    document.getElementById('joined-msg').textContent = 'Joined ' + state.host + '\u2019s room!';
+    seenMsgCount = 0; lastChatLen = 0; lastPhaseKey = null;
+    showScreen('joined-screen');
+    subscribeAll();
+  });
+});
 
-window.hostSelectMode = function(mode) {
+// join-code auto uppercase
+document.getElementById('join-code').addEventListener('input', function() {
+  this.value = this.value.toUpperCase();
+});
+
+// ── Host controls ──────────────────────────────────────────────
+document.getElementById('mc-playful').addEventListener('click', function() { hostSelectMode('playful'); });
+document.getElementById('mc-spicy').addEventListener('click',   function() { hostSelectMode('spicy'); });
+
+function hostSelectMode(mode) {
   document.getElementById('mc-playful').classList.toggle('selected', mode==='playful');
   document.getElementById('mc-spicy').classList.toggle('selected', mode==='spicy');
-};
+}
 
-window.hostStartGame = async function() {
-  const state = await getState();
-  if (!state || !state.guest) return;
-  const mode = document.getElementById('mc-spicy').classList.contains('selected') ? 'spicy' : 'playful';
-  const firstQ = pickQuestion('any', [], []);
-  const usedP = firstQ.qPool==='playful' ? [firstQ.qIdx] : [];
-  const usedS = firstQ.qPool==='spicy'   ? [firstQ.qIdx] : [];
-  Object.assign(state, {
-    mode, phase: 'answering', round: 1, answererRole: 'host',
-    scores: {host:0,guest:0}, realAnswer: null, guessAnswer: null, winner: null,
-    nextQType: 'any', currentQIdx: firstQ.qIdx, currentQPool: firstQ.qPool,
-    usedPlayful: usedP, usedSpicy: usedS, lastUpdated: Date.now()
+document.getElementById('start-btn').addEventListener('click', function() {
+  roomRef(roomCode).once('value', snap => {
+    if (!snap.exists()) return;
+    const state = snap.val();
+    if (!state.guest) return;
+    const mode = document.getElementById('mc-spicy').classList.contains('selected') ? 'spicy' : 'playful';
+    const firstQ = pickQuestion('any', [], []);
+    const usedP = firstQ.qPool==='playful' ? [firstQ.qIdx] : [];
+    const usedS = firstQ.qPool==='spicy'   ? [firstQ.qIdx] : [];
+    Object.assign(state, {
+      mode, phase: 'answering', round: 1, answererRole: 'host',
+      scores: {host:0,guest:0}, realAnswer: null, guessAnswer: null, winner: null,
+      nextQType: 'any', currentQIdx: firstQ.qIdx, currentQPool: firstQ.qPool,
+      usedPlayful: usedP, usedSpicy: usedS, lastUpdated: Date.now()
+    });
+    roomRef(roomCode).set(state);
   });
-  await saveState(state);
-};
+});
 
-window.hostNextRound = async function() {
-  const state = await getState(); if (!state) return;
-  const nextQ = pickQuestion(selectedQType, state.usedPlayful||[], state.usedSpicy||[]);
-  const usedP = [...(state.usedPlayful||[])];
-  const usedS = [...(state.usedSpicy||[])];
-  if (nextQ.qPool==='playful' && !usedP.includes(nextQ.qIdx)) usedP.push(nextQ.qIdx);
-  if (nextQ.qPool==='spicy'   && !usedS.includes(nextQ.qIdx)) usedS.push(nextQ.qIdx);
-  if (usedP.length >= playfulQ.length) usedP.length = 0;
-  if (usedS.length >= spicyQ.length)   usedS.length = 0;
-  Object.assign(state, {
-    currentQIdx: nextQ.qIdx, currentQPool: nextQ.qPool,
-    usedPlayful: usedP, usedSpicy: usedS,
-    round: state.round+1,
-    answererRole: state.answererRole==='host'?'guest':'host',
-    phase: 'answering', realAnswer: null, guessAnswer: null,
-    nextQType: selectedQType, lastUpdated: Date.now()
+document.getElementById('next-btn').addEventListener('click', function() {
+  roomRef(roomCode).once('value', snap => {
+    if (!snap.exists()) return;
+    const state = snap.val();
+    const nextQ = pickQuestion(selectedQType, state.usedPlayful||[], state.usedSpicy||[]);
+    const usedP = [...(state.usedPlayful||[])];
+    const usedS = [...(state.usedSpicy||[])];
+    if (nextQ.qPool==='playful' && !usedP.includes(nextQ.qIdx)) usedP.push(nextQ.qIdx);
+    if (nextQ.qPool==='spicy'   && !usedS.includes(nextQ.qIdx)) usedS.push(nextQ.qIdx);
+    if (usedP.length >= playfulQ.length) usedP.length = 0;
+    if (usedS.length >= spicyQ.length)   usedS.length = 0;
+    Object.assign(state, {
+      currentQIdx: nextQ.qIdx, currentQPool: nextQ.qPool,
+      usedPlayful: usedP, usedSpicy: usedS,
+      round: state.round+1,
+      answererRole: state.answererRole==='host'?'guest':'host',
+      phase: 'answering', realAnswer: null, guessAnswer: null,
+      nextQType: selectedQType, lastUpdated: Date.now()
+    });
+    roomRef(roomCode).set(state);
   });
-  await saveState(state);
-};
+});
 
-window.hostPlayAgain = async function() {
-  const state = await getState(); if (!state) return;
-  const firstQ = pickQuestion('any', [], []);
-  const usedP = firstQ.qPool==='playful' ? [firstQ.qIdx] : [];
-  const usedS = firstQ.qPool==='spicy'   ? [firstQ.qIdx] : [];
-  Object.assign(state, {
-    phase: 'answering', round: 1, answererRole: 'host',
-    scores: {host:0,guest:0}, winner: null,
-    realAnswer: null, guessAnswer: null, nextQType: 'any',
-    currentQIdx: firstQ.qIdx, currentQPool: firstQ.qPool,
-    usedPlayful: usedP, usedSpicy: usedS, lastUpdated: Date.now()
+document.getElementById('play-again-btn').addEventListener('click', function() {
+  roomRef(roomCode).once('value', snap => {
+    if (!snap.exists()) return;
+    const state = snap.val();
+    const firstQ = pickQuestion('any', [], []);
+    const usedP = firstQ.qPool==='playful' ? [firstQ.qIdx] : [];
+    const usedS = firstQ.qPool==='spicy'   ? [firstQ.qIdx] : [];
+    Object.assign(state, {
+      phase: 'answering', round: 1, answererRole: 'host',
+      scores: {host:0,guest:0}, winner: null,
+      realAnswer: null, guessAnswer: null, nextQType: 'any',
+      currentQIdx: firstQ.qIdx, currentQPool: firstQ.qPool,
+      usedPlayful: usedP, usedSpicy: usedS, lastUpdated: Date.now()
+    });
+    roomRef(roomCode).set(state);
   });
-  await saveState(state);
-};
+});
 
-window.lockAnswer = async function() {
+// Q-type picker
+document.querySelectorAll('.q-type-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    selectedQType = this.dataset.type;
+    document.querySelectorAll('.q-type-btn').forEach(b => b.classList.toggle('selected', b===this));
+  });
+});
+
+// Lock answer
+document.getElementById('lock-btn').addEventListener('click', function() {
   if (selectedAnswerIdx === -1) return;
-  const state = await getState(); if (!state) return;
-  state.realAnswer = selectedAnswerIdx; state.phase = 'guessing'; state.lastUpdated = Date.now();
-  await saveState(state);
-};
+  roomRef(roomCode).once('value', snap => {
+    if (!snap.exists()) return;
+    const state = snap.val();
+    state.realAnswer = selectedAnswerIdx; state.phase = 'guessing'; state.lastUpdated = Date.now();
+    roomRef(roomCode).set(state);
+  });
+});
 
-async function submitGuess(idx) {
-  const state = await getState(); if (!state) return;
-  const gr = state.answererRole==='host'?'guest':'host';
-  if (idx === state.realAnswer) state.scores[gr]++;
-  state.guessAnswer = idx;
-  state.winner = state.scores[gr] >= WIN_SCORE ? gr : null;
-  state.phase = state.winner ? 'win' : 'reveal';
-  state.lastUpdated = Date.now();
-  await saveState(state);
-}
+// Leave buttons
+document.getElementById('leave-btn-reveal').addEventListener('click', leaveGame);
+document.getElementById('leave-btn-win').addEventListener('click', leaveGame);
 
-window.leaveGame = async function() {
+function leaveGame() {
   unsubAll(); lastPhaseKey = null;
-  try { await remove(roomRef(roomCode)); } catch(e) {}
-  try { await remove(chatRef(roomCode)); } catch(e) {}
+  roomRef(roomCode).remove();
+  chatRef(roomCode).remove();
   showScreen('lobby-screen');
-};
-
-function getPool(state) {
-  return (state.currentQPool || 'playful') === 'playful' ? playfulQ : spicyQ;
 }
 
+// ── State handler ──────────────────────────────────────────────
 function handleState(state) {
   const host     = myRole === 'host';
   const answerer = (host&&state.answererRole==='host')||(!host&&state.answererRole==='guest');
@@ -556,44 +570,69 @@ function handleState(state) {
   if (pk === lastPhaseKey) return;
   lastPhaseKey = pk; selectedAnswerIdx = -1;
 
-  if (state.phase==='win') { renderWin(state,host); showScreen('win-screen'); }
+  if      (state.phase==='win')      { renderWin(state,host);       showScreen('win-screen'); }
   else if (state.phase==='answering') {
     if (answerer) { renderAnswer(state,q); showScreen('answer-screen'); }
     else { document.getElementById('sb-partans').innerHTML=sbHTML(state,null); document.getElementById('partans-name').textContent=partner||'Partner'; showScreen('partner-answering-screen'); }
-  } else if (state.phase==='guessing') {
+  }
+  else if (state.phase==='guessing') {
     if (!answerer) { renderGuess(state,q); showScreen('guess-screen'); }
     else { document.getElementById('sb-partguess').innerHTML=sbHTML(state,null); document.getElementById('partguess-name').textContent=partner||'Partner'; showScreen('partner-guessing-screen'); }
-  } else if (state.phase==='reveal') { renderReveal(state,q,host); showScreen('reveal-screen'); }
+  }
+  else if (state.phase==='reveal')  { renderReveal(state,q,host);  showScreen('reveal-screen'); }
 }
 
-function renderAnswer(state,q) {
+function renderAnswer(state, q) {
   document.getElementById('badge-answer').textContent = 'Round '+state.round+' · Your turn to answer';
   document.getElementById('prog-answer').style.width = Math.min((Math.max(state.scores.host,state.scores.guest)/WIN_SCORE)*100,100)+'%';
   document.getElementById('q-answer').textContent = q.q;
-  document.getElementById('sb-answer').innerHTML = sbHTML(state,myRole);
+  document.getElementById('sb-answer').innerHTML = sbHTML(state, myRole);
   const cont = document.getElementById('opts-answer');
-  cont.innerHTML = ''; selectedAnswerIdx = -1; document.getElementById('lock-btn').disabled = true;
+  cont.innerHTML = ''; selectedAnswerIdx = -1;
+  document.getElementById('lock-btn').disabled = true;
   q.options.forEach((opt,i) => {
     const b = document.createElement('button'); b.className='opt-btn'; b.textContent=opt;
-    b.onclick = () => { selectedAnswerIdx=i; document.querySelectorAll('#opts-answer .opt-btn').forEach((x,j)=>x.className='opt-btn'+(j===i?' chosen':'')); document.getElementById('lock-btn').disabled=false; };
+    b.addEventListener('click', function() {
+      selectedAnswerIdx = i;
+      document.querySelectorAll('#opts-answer .opt-btn').forEach((x,j) => x.className='opt-btn'+(j===i?' chosen':''));
+      document.getElementById('lock-btn').disabled = false;
+    });
     cont.appendChild(b);
   });
 }
 
-function renderGuess(state,q) {
+function renderGuess(state, q) {
   const an = state.answererRole==='host'?state.host:state.guest;
   document.getElementById('badge-guess').textContent = 'Round '+state.round+' · Guess what '+an+' picked';
   document.getElementById('q-guess').textContent = q.q;
-  document.getElementById('sb-guess').innerHTML = sbHTML(state,myRole==='host'?'guest':'host');
+  document.getElementById('sb-guess').innerHTML = sbHTML(state, myRole==='host'?'guest':'host');
   const cont = document.getElementById('opts-guess'); cont.innerHTML = '';
   q.options.forEach((opt,i) => {
     const b = document.createElement('button'); b.className='opt-btn'; b.textContent=opt;
-    b.onclick = () => { document.querySelectorAll('#opts-guess .opt-btn').forEach(x=>x.disabled=true); b.className='opt-btn chosen'; submitGuess(i); };
+    b.addEventListener('click', function() {
+      document.querySelectorAll('#opts-guess .opt-btn').forEach(x => x.disabled=true);
+      b.className='opt-btn chosen';
+      submitGuess(i);
+    });
     cont.appendChild(b);
   });
 }
 
-function renderReveal(state,q,host) {
+function submitGuess(idx) {
+  roomRef(roomCode).once('value', snap => {
+    if (!snap.exists()) return;
+    const state = snap.val();
+    const gr = state.answererRole==='host'?'guest':'host';
+    if (idx === state.realAnswer) state.scores[gr]++;
+    state.guessAnswer = idx;
+    state.winner = state.scores[gr] >= WIN_SCORE ? gr : null;
+    state.phase  = state.winner ? 'win' : 'reveal';
+    state.lastUpdated = Date.now();
+    roomRef(roomCode).set(state);
+  });
+}
+
+function renderReveal(state, q, host) {
   const correct = state.guessAnswer===state.realAnswer;
   const gr = state.answererRole==='host'?'guest':'host';
   const gn = gr==='host'?state.host:state.guest;
@@ -603,8 +642,8 @@ function renderReveal(state,q,host) {
     ?'<span class="result-correct">'+gn+' got it right!</span><br>'+q.options[state.realAnswer]
     :'<span class="result-wrong">'+gn+' was wrong.</span><br>The answer was: <strong>'+q.options[state.realAnswer]+'</strong>';
   document.getElementById('reveal-q').textContent = '\u201c'+q.q+'\u201d';
-  const qPicker = document.getElementById('q-type-picker');
-  const qLabel  = document.getElementById('q-type-label');
+  const qPicker  = document.getElementById('q-type-picker');
+  const qLabel   = document.getElementById('q-type-label');
   const nextBtn  = document.getElementById('next-btn');
   const waitNext = document.getElementById('waiting-next');
   if (host) {
@@ -618,7 +657,7 @@ function renderReveal(state,q,host) {
   }
 }
 
-function renderWin(state,host) {
+function renderWin(state, host) {
   const wr = state.winner;
   const wn = wr==='host'?state.host:state.guest;
   const iWon = (host&&wr==='host')||(!host&&wr==='guest');
@@ -627,17 +666,19 @@ function renderWin(state,host) {
   document.getElementById('win-sub').textContent = iWon?'You know them better than they know you 😏':'Better luck next time... 😬';
   document.getElementById('final-scores').innerHTML = sbHTML(state,wr);
   document.getElementById('play-again-btn').style.display = host?'block':'none';
-  document.getElementById('waiting-again').style.display = host?'none':'block';
+  document.getElementById('waiting-again').style.display  = host?'none':'block';
 }
 
-window.sendChatMsg = async function(text) {
+// ── Chat ───────────────────────────────────────────────────────
+function sendChatMsg(text) {
   if (!roomCode) return;
-  let msgs = [];
-  try { const s = await get(chatRef(roomCode)); if (s.exists()&&Array.isArray(s.val())) msgs = s.val(); } catch(e) {}
-  msgs.push({sender:myName,role:myRole,text,ts:Date.now()});
-  if (msgs.length>60) msgs = msgs.slice(-60);
-  await set(chatRef(roomCode), msgs);
-};
+  chatRef(roomCode).once('value', snap => {
+    let msgs = (snap.exists() && Array.isArray(snap.val())) ? snap.val() : [];
+    msgs.push({ sender: myName, role: myRole, text, ts: Date.now() });
+    if (msgs.length > 60) msgs = msgs.slice(-60);
+    chatRef(roomCode).set(msgs);
+  });
+}
 
 function handleChat(msgs) {
   if (!Array.isArray(msgs)) msgs = [];
@@ -647,48 +688,81 @@ function handleChat(msgs) {
 }
 
 function updateBadge(msgs) {
-  const unread = Math.max(0,(msgs?msgs.length:0)-seenMsgCount);
+  const unread = Math.max(0, (msgs?msgs.length:0) - seenMsgCount);
   document.querySelectorAll('.chat-unread').forEach(el => {
-    el.textContent = unread>0?String(unread):'';
-    el.style.display = unread>0?'inline-block':'none';
+    el.textContent = unread>0 ? String(unread) : '';
+    el.style.display = unread>0 ? 'inline-block' : 'none';
   });
 }
 
 function buildChat(id) {
   const c = document.getElementById(id); if (!c) return;
-  const p = document.createElement('div'); p.className='chat-panel';
-  p.innerHTML = `
-    <div class="chat-header" onclick="toggleChat('${id}')">
-      <div class="chat-header-left"><span>💬 Chat</span><span class="chat-unread"></span></div>
-      <span id="chev-${id}" style="font-size:12px;color:#aaa;">▼</span>
-    </div>
-    <div class="chat-body" id="body-${id}">
-      <div class="chat-messages" id="msgs-${id}"><div class="chat-empty">No messages yet</div></div>
-      <div class="chat-quick">
-        ${quickReplies.map(r=>`<button class="chat-quick-btn" onclick="sendChatMsg(${JSON.stringify(r.text)})">${r.label}</button>`).join('')}
-      </div>
-    </div>`;
-  c.appendChild(p);
+  const panel = document.createElement('div');
+  panel.className = 'chat-panel';
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'chat-header';
+  header.innerHTML = '<div class="chat-header-left"><span>💬 Chat</span><span class="chat-unread"></span></div><span class="chat-chevron" style="font-size:12px;color:#aaa;">▼</span>';
+  header.addEventListener('click', function() { toggleChat(id); });
+
+  // Body
+  const body = document.createElement('div');
+  body.className = 'chat-body';
+  body.id = 'body-' + id;
+
+  // Messages
+  const msgs = document.createElement('div');
+  msgs.className = 'chat-messages';
+  msgs.id = 'msgs-' + id;
+  msgs.innerHTML = '<div class="chat-empty">No messages yet</div>';
+
+  // Quick reply buttons
+  const quick = document.createElement('div');
+  quick.className = 'chat-quick';
+  quickReplies.forEach(function(r) {
+    const btn = document.createElement('button');
+    btn.className = 'chat-quick-btn';
+    btn.textContent = r.label;
+    btn.addEventListener('click', function() { sendChatMsg(r.text); });
+    quick.appendChild(btn);
+  });
+
+  body.appendChild(msgs);
+  body.appendChild(quick);
+  panel.appendChild(header);
+  panel.appendChild(body);
+  c.appendChild(panel);
 }
 
-window.toggleChat = function(id) {
-  const body = document.getElementById('body-'+id);
-  const chev = document.getElementById('chev-'+id);
+function toggleChat(id) {
+  const body  = document.getElementById('body-' + id);
+  const panel = body ? body.closest('.chat-panel') : null;
   if (!body) return;
   const open = body.classList.toggle('open');
-  if (chev) chev.textContent = open?'▲':'▼';
-  if (open) { seenMsgCount=lastChatLen; updateBadge(null); const m=document.getElementById('msgs-'+id); if(m) m.scrollTop=m.scrollHeight; }
-};
+  const chev = panel ? panel.querySelector('.chat-chevron') : null;
+  if (chev) chev.textContent = open ? '▲' : '▼';
+  if (open) {
+    seenMsgCount = lastChatLen;
+    updateBadge(null);
+    const m = document.getElementById('msgs-' + id);
+    if (m) m.scrollTop = m.scrollHeight;
+  }
+}
 
 function renderChats(msgs) {
   if (!Array.isArray(msgs)) msgs = [];
-  chatIds.forEach(id => {
+  chatIds.forEach(function(id) {
     const el = document.getElementById(id); if (!el) return;
     if (!el.innerHTML) buildChat(id);
-    const mc = document.getElementById('msgs-'+id); if (!mc) return;
-    mc.innerHTML = msgs.length===0
-      ?'<div class="chat-empty">No messages yet</div>'
-      :msgs.map(m=>`<div class="chat-msg ${m.role===myRole?'mine':'theirs'}"><div class="msg-sender">${m.sender}</div>${m.text}</div>`).join('');
+    const mc = document.getElementById('msgs-' + id); if (!mc) return;
+    mc.innerHTML = msgs.length === 0
+      ? '<div class="chat-empty">No messages yet</div>'
+      : msgs.map(function(m) {
+          return '<div class="chat-msg ' + (m.role===myRole?'mine':'theirs') + '">'
+               + '<div class="msg-sender">' + m.sender + '</div>'
+               + m.text + '</div>';
+        }).join('');
     mc.scrollTop = mc.scrollHeight;
   });
   updateBadge(msgs);
