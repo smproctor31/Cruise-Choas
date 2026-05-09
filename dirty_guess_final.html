@@ -21,15 +21,18 @@ input[type="text"]:focus { border-color: #4f8ef7; }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-primary { background: #4f8ef7; border-color: #4f8ef7; color: #fff; }
 .btn-primary:hover { background: #3a7de8; }
+.btn-success { background: #34c759; border-color: #34c759; color: #fff; }
+.btn-success:hover { background: #28a745; }
 .btn-subtle { border-color: #eee; color: #999; font-size: 14px; }
 .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; background: #f0f0f0; color: #666; margin-bottom: 0.75rem; }
-.scoreboard { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+.scoreboard { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 0.5rem; }
 .score-cell { background: #f5f5f5; border-radius: 12px; padding: 0.75rem 1rem; text-align: center; border: 1px solid transparent; }
 .score-cell.active { background: #eef4ff; border-color: #c0d8ff; }
 .score-name { font-size: 12px; color: #888; margin-bottom: 4px; }
 .score-val { font-size: 28px; font-weight: 700; color: #1a1a1a; }
 .score-cell.active .score-name { color: #4f8ef7; }
 .score-cell.active .score-val { color: #4f8ef7; }
+.score-to-win { font-size: 12px; color: #888; text-align: center; margin-bottom: 1rem; margin-top: 4px; }
 .round-q { font-size: 17px; line-height: 1.55; color: #1a1a1a; margin: 0.75rem 0 1.25rem; min-height: 72px; }
 .opt-btn { display: block; width: 100%; text-align: left; background: #f5f5f5; border: 1px solid #e5e5e5; border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 8px; font-size: 15px; color: #1a1a1a; cursor: pointer; transition: all 0.1s; }
 .opt-btn:hover { border-color: #bbb; background: #efefef; }
@@ -49,7 +52,7 @@ input[type="text"]:focus { border-color: #4f8ef7; }
 .mode-desc { font-size: 12px; color: #888; margin-top: 3px; }
 .progress-bar { height: 4px; background: #f0f0f0; border-radius: 2px; margin-bottom: 1rem; overflow: hidden; }
 .progress-fill { height: 100%; background: #4f8ef7; border-radius: 2px; transition: width 0.4s; }
-.room-code { font-size: 56px; font-weight: 800; letter-spacing: 0.18em; text-align: center; padding: 1rem 0 0.5rem; }
+.room-code { font-size: 56px; font-weight: 800; letter-spacing: 0.18em; text-align: center; padding: 1rem 0 0.5rem; color: #1a1a1a; }
 .room-code-hint { font-size: 13px; color: #888; text-align: center; margin-bottom: 1rem; }
 .code-input { font-size: 28px !important; letter-spacing: 0.2em; text-align: center; text-transform: uppercase; font-weight: 700; }
 .result-correct { color: #1a7a3a; font-weight: 700; }
@@ -57,6 +60,15 @@ input[type="text"]:focus { border-color: #4f8ef7; }
 .result-big { font-size: 16px; line-height: 1.6; }
 hr { border: none; border-top: 1px solid #eee; margin: 1rem 0; }
 .error-msg { font-size: 13px; color: #e74c3c; margin-top: 0.5rem; min-height: 1.2em; }
+.q-type-picker { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
+.q-type-btn { background: #f5f5f5; border: 1px solid #e5e5e5; border-radius: 10px; padding: 0.6rem 0.5rem; font-size: 13px; color: #1a1a1a; cursor: pointer; text-align: center; transition: all 0.15s; }
+.q-type-btn:hover { border-color: #bbb; }
+.q-type-btn.selected { border: 2px solid #4f8ef7; background: #eef4ff; color: #2563eb; font-weight: 600; }
+.win-card { text-align: center; padding: 2rem 1.5rem; }
+.win-trophy { font-size: 56px; margin-bottom: 1rem; }
+.win-name { font-size: 24px; font-weight: 700; color: #1a1a1a; margin-bottom: 0.5rem; }
+.win-sub { font-size: 15px; color: #666; margin-bottom: 1.5rem; }
+.final-scores { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.5rem; }
 .chat-panel { margin-top: 0.75rem; border: 1px solid #e5e5e5; border-radius: 16px; overflow: hidden; background: #fff; }
 .chat-header { padding: 0.65rem 1rem; background: #f5f5f5; font-size: 13px; font-weight: 600; color: #666; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
 .chat-header-left { display: flex; align-items: center; gap: 8px; }
@@ -70,20 +82,21 @@ hr { border: none; border-top: 1px solid #eee; margin: 1rem 0; }
 .chat-msg.theirs { align-self: flex-start; background: #f0f0f0; color: #1a1a1a; border-bottom-left-radius: 4px; }
 .chat-msg .msg-sender { font-size: 10px; opacity: 0.6; margin-bottom: 2px; }
 .chat-quick { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 0.75rem; background: #f9f9f9; border-top: 1px solid #eee; }
-.chat-quick button { background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 0.5rem 0.6rem; font-size: 13px; color: #1a1a1a; cursor: pointer; text-align: left; line-height: 1.35; transition: background 0.1s; }
-.chat-quick button:hover { background: #f0f0f0; }
-.chat-quick button:last-child { grid-column: 1 / -1; }
+.chat-quick-btn { background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 0.5rem 0.6rem; font-size: 13px; color: #1a1a1a; cursor: pointer; text-align: left; line-height: 1.35; transition: background 0.1s; }
+.chat-quick-btn:hover { background: #f0f0f0; }
+.chat-quick-btn:last-child { grid-column: 1 / -1; }
 @media (prefers-color-scheme: dark) {
   body { background: #111; color: #f0f0f0; }
   .card { background: #1e1e1e; border-color: #2e2e2e; }
-  h1, h2, .round-q, .waiting-name, .score-val, .room-code { color: #f0f0f0; }
-  .subtitle, .waiting-msg, .score-name, .room-code-hint { color: #888; }
+  h1, h2, .round-q, .waiting-name, .score-val, .room-code, .win-name { color: #f0f0f0; }
+  .subtitle, .waiting-msg, .score-name, .room-code-hint, .score-to-win, .win-sub { color: #888; }
   input[type="text"] { background: #2a2a2a; border-color: #3a3a3a; color: #f0f0f0; }
   input[type="text"]:focus { border-color: #4f8ef7; }
   .btn { background: #1e1e1e; border-color: #3a3a3a; color: #f0f0f0; }
   .btn:hover { background: #2a2a2a; }
   .btn-primary { background: #4f8ef7; border-color: #4f8ef7; color: #fff; }
   .btn-primary:hover { background: #3a7de8; }
+  .btn-success { background: #34c759; border-color: #34c759; color: #fff; }
   .btn-subtle { color: #555; border-color: #2a2a2a; }
   .score-cell { background: #2a2a2a; }
   .score-cell.active { background: #162040; border-color: #2a4a8a; }
@@ -97,13 +110,15 @@ hr { border: none; border-top: 1px solid #eee; margin: 1rem 0; }
   .progress-bar { background: #2a2a2a; }
   .badge { background: #2a2a2a; color: #888; }
   hr { border-color: #2a2a2a; }
+  .q-type-btn { background: #2a2a2a; border-color: #3a3a3a; color: #f0f0f0; }
+  .q-type-btn.selected { background: #162040; border-color: #4f8ef7; color: #7ab0ff; }
   .chat-panel { background: #1e1e1e; border-color: #2e2e2e; }
   .chat-header { background: #2a2a2a; color: #888; }
   .chat-messages { background: #1e1e1e; }
   .chat-msg.theirs { background: #2a2a2a; color: #f0f0f0; }
   .chat-quick { background: #161616; border-color: #2a2a2a; }
-  .chat-quick button { background: #1e1e1e; border-color: #2e2e2e; color: #f0f0f0; }
-  .chat-quick button:hover { background: #2a2a2a; }
+  .chat-quick-btn { background: #1e1e1e; border-color: #2e2e2e; color: #f0f0f0; }
+  .chat-quick-btn:hover { background: #2a2a2a; }
 }
 </style>
 </head>
@@ -113,7 +128,7 @@ hr { border: none; border-top: 1px solid #eee; margin: 1rem 0; }
   <div id="lobby-screen" class="screen active">
     <div class="card">
       <h1>🔥 Dirty Guess</h1>
-      <p class="subtitle">Two phones, one game.</p>
+      <p class="subtitle">Two phones, one game. First to 5 points wins.</p>
       <input type="text" id="my-name" placeholder="Your name" maxlength="20" />
       <button class="btn btn-primary" onclick="createRoom()">Create a room</button>
       <hr>
@@ -154,6 +169,7 @@ hr { border: none; border-top: 1px solid #eee; margin: 1rem 0; }
 
   <div id="answer-screen" class="screen">
     <div class="scoreboard" id="sb-answer"></div>
+    <div class="score-to-win">First to 5 wins 🏆</div>
     <div class="card">
       <div class="badge" id="badge-answer"></div>
       <div class="progress-bar"><div class="progress-fill" id="prog-answer"></div></div>
@@ -166,6 +182,7 @@ hr { border: none; border-top: 1px solid #eee; margin: 1rem 0; }
 
   <div id="partner-answering-screen" class="screen">
     <div class="scoreboard" id="sb-partans"></div>
+    <div class="score-to-win">First to 5 wins 🏆</div>
     <div class="card waiting">
       <div class="waiting-spinner">🤔</div>
       <div class="waiting-name" id="partans-name"></div>
@@ -176,6 +193,7 @@ hr { border: none; border-top: 1px solid #eee; margin: 1rem 0; }
 
   <div id="guess-screen" class="screen">
     <div class="scoreboard" id="sb-guess"></div>
+    <div class="score-to-win">First to 5 wins 🏆</div>
     <div class="card">
       <div class="badge" id="badge-guess"></div>
       <div class="round-q" id="q-guess"></div>
@@ -186,6 +204,7 @@ hr { border: none; border-top: 1px solid #eee; margin: 1rem 0; }
 
   <div id="partner-guessing-screen" class="screen">
     <div class="scoreboard" id="sb-partguess"></div>
+    <div class="score-to-win">First to 5 wins 🏆</div>
     <div class="card waiting">
       <div class="waiting-spinner">🕵️</div>
       <div class="waiting-name" id="partguess-name"></div>
@@ -196,15 +215,37 @@ hr { border: none; border-top: 1px solid #eee; margin: 1rem 0; }
 
   <div id="reveal-screen" class="screen">
     <div class="scoreboard" id="sb-reveal"></div>
+    <div class="score-to-win">First to 5 wins 🏆</div>
     <div class="card" style="text-align:center;">
       <div style="font-size:44px;margin-bottom:0.75rem;" id="reveal-icon"></div>
       <div class="result-big" id="reveal-msg"></div>
       <div style="font-size:13px;color:#888;margin-top:0.75rem;font-style:italic;" id="reveal-q"></div>
     </div>
-    <button class="btn btn-primary" id="next-btn" onclick="hostNextRound()" style="display:none;">Next round ▶</button>
-    <div id="waiting-next" style="text-align:center;font-size:14px;color:#888;margin-top:0.75rem;display:none;">Waiting for host to start next round...</div>
-    <button class="btn btn-subtle" onclick="leaveGame()" style="margin-top:6px;">Leave game</button>
+    <div class="card" style="padding:1rem 1.25rem;">
+      <p style="font-size:13px;font-weight:600;color:#888;margin-bottom:0.75rem;" id="q-type-label">Pick the next question type:</p>
+      <div class="q-type-picker" id="q-type-picker">
+        <div class="q-type-btn selected" data-type="any" onclick="selectQType('any')">🎲 Any</div>
+        <div class="q-type-btn" data-type="playful" onclick="selectQType('playful')">😄 Playful</div>
+        <div class="q-type-btn" data-type="spicy" onclick="selectQType('spicy')">🌶️ Spicy</div>
+      </div>
+      <button class="btn btn-primary" id="next-btn" onclick="hostNextRound()" style="display:none;margin-top:0;">Next round ▶</button>
+      <div id="waiting-next" style="text-align:center;font-size:14px;color:#888;margin-top:0.75rem;display:none;">Waiting for host to start next round...</div>
+    </div>
+    <button class="btn btn-subtle" onclick="leaveGame()" style="margin-top:0;">Leave game</button>
     <div id="chat-reveal"></div>
+  </div>
+
+  <div id="win-screen" class="screen">
+    <div class="card win-card">
+      <div class="win-trophy" id="win-trophy">🏆</div>
+      <div class="win-name" id="win-name"></div>
+      <div class="win-sub" id="win-sub"></div>
+      <div class="final-scores" id="final-scores"></div>
+      <button class="btn btn-success" id="play-again-btn" onclick="hostPlayAgain()" style="display:none;">Play again 🔄</button>
+      <div id="waiting-again" style="text-align:center;font-size:14px;color:#888;margin-top:0.75rem;display:none;">Waiting for host to start a new game...</div>
+      <button class="btn btn-subtle" onclick="leaveGame()" style="margin-top:0.5rem;">Leave game</button>
+    </div>
+    <div id="chat-win"></div>
   </div>
 
 </div>
@@ -223,13 +264,7 @@ const firebaseConfig = {
   appId: "1:272737958124:web:0478173133503029f58dc9"
 };
 
-let db;
-try {
-  const app = initializeApp(firebaseConfig);
-  db = getDatabase(app);
-} catch(e) {
-  document.getElementById('lobby-error').textContent = 'Firebase init failed: ' + e.message;
-}
+const db = getDatabase(initializeApp(firebaseConfig));
 
 const playfulQ = [
   { q: "You get stuck in an elevator for an hour. What's most likely?", options: ["Panic and push every button","Make out like teenagers","Tell embarrassing stories","Attempt sneaky sex"] },
@@ -278,20 +313,51 @@ const spicyQ = [
 ];
 
 const quickReplies = [
-  { label: "😏 That's what she said",       text: "That's what she said 😏" },
-  { label: "🥵 That turned me on",           text: "That answer actually turned me on 🥵" },
-  { label: "👅 You'll get it later",          text: "Keep playing like that and you'll get a reward later 👅" },
-  { label: "🍑 I know exactly why",           text: "Oh I know EXACTLY why you picked that 🍑" },
-  { label: "🔥 We're finishing this in bed",  text: "We are absolutely finishing this game in bed 🔥" },
+  { label: "😂 Sure you did...",            text: "Sure you did... 😂" },
+  { label: "🤡 That's embarrassing",        text: "That is genuinely embarrassing for you 🤡" },
+  { label: "💀 Wrong and you know it",       text: "Wrong answer AND you know it 💀" },
+  { label: "🔥 That's hot!",                text: "That's hot! 🔥" },
+  { label: "😈 You'll pay for that later",   text: "Oh you are absolutely paying for that later 😈" },
 ];
 
+const WIN_SCORE = 5;
 let myName = '', myRole = '', roomCode = '';
 let selectedAnswerIdx = -1, seenMsgCount = 0, lastChatLen = 0;
 let stateUnsub = null, chatUnsub = null, lastPhaseKey = null;
-const chatIds = ['chat-wait','chat-joined','chat-answer','chat-partans','chat-guess','chat-partguess','chat-reveal'];
+let selectedQType = 'any';
+const chatIds = ['chat-wait','chat-joined','chat-answer','chat-partans','chat-guess','chat-partguess','chat-reveal','chat-win'];
 
 const roomRef = c => ref(db, 'rooms/' + c.toUpperCase());
 const chatRef = c => ref(db, 'chats/' + c.toUpperCase());
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+function pickQuestion(qType, usedPlayful, usedSpicy) {
+  if (qType === 'playful') {
+    const unused = playfulQ.map((_,i)=>i).filter(i=>!usedPlayful.includes(i));
+    const src = unused.length > 0 ? unused : playfulQ.map((_,i)=>i);
+    return { qIdx: src[Math.floor(Math.random()*src.length)], qPool: 'playful' };
+  }
+  if (qType === 'spicy') {
+    const unused = spicyQ.map((_,i)=>i).filter(i=>!usedSpicy.includes(i));
+    const src = unused.length > 0 ? unused : spicyQ.map((_,i)=>i);
+    return { qIdx: src[Math.floor(Math.random()*src.length)], qPool: 'spicy' };
+  }
+  const combined = [
+    ...playfulQ.map((_,i)=>({pool:'playful',idx:i})).filter(x=>!usedPlayful.includes(x.idx)),
+    ...spicyQ.map((_,i)=>({pool:'spicy',idx:i})).filter(x=>!usedSpicy.includes(x.idx))
+  ];
+  const src = combined.length > 0 ? combined : [
+    ...playfulQ.map((_,i)=>({pool:'playful',idx:i})),
+    ...spicyQ.map((_,i)=>({pool:'spicy',idx:i}))
+  ];
+  const pick = src[Math.floor(Math.random()*src.length)];
+  return { qIdx: pick.idx, qPool: pick.pool };
+}
 
 async function getState() {
   try { const s = await get(roomRef(roomCode)); return s.exists() ? s.val() : null; } catch(e) { return null; }
@@ -308,17 +374,6 @@ function unsubAll() {
   if (chatUnsub)  { chatUnsub();  chatUnsub  = null; }
 }
 
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  chatIds.forEach(cid => { const el = document.getElementById(cid); if (el && !el.innerHTML) buildChat(cid); });
-}
-function lobbyErr(m) { document.getElementById('lobby-error').textContent = m; }
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
-  return a;
-}
 function sbHTML(state, active) {
   return ['host','guest'].map((r,i) => `
     <div class="score-cell ${r===active?'active':''}">
@@ -327,15 +382,32 @@ function sbHTML(state, active) {
     </div>`).join('');
 }
 
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  chatIds.forEach(cid => { const el = document.getElementById(cid); if (el && !el.innerHTML) buildChat(cid); });
+}
+function lobbyErr(m) { document.getElementById('lobby-error').textContent = m; }
+
+window.selectQType = function(type) {
+  selectedQType = type;
+  document.querySelectorAll('.q-type-btn').forEach(b => b.classList.toggle('selected', b.dataset.type === type));
+};
+
 window.createRoom = async function() {
   myName = document.getElementById('my-name').value.trim();
   if (!myName) { lobbyErr('Enter your name first.'); return; }
   const code = Math.floor(1000+Math.random()*9000).toString();
   roomCode = code; myRole = 'host';
-  const shuffled = shuffle([...Array(playfulQ.length).keys()]);
-  const state = { code, host: myName, guest: null, mode: 'playful', phase: 'lobby', round: 0,
-    scores: {host:0,guest:0}, answererRole: 'host', currentQIdx: shuffled[0],
-    questionOrder: shuffled, usedCount: 1, realAnswer: null, guessAnswer: null, lastUpdated: Date.now() };
+  const firstQ = pickQuestion('any', [], []);
+  const state = {
+    code, host: myName, guest: null, mode: 'playful', phase: 'lobby', round: 0,
+    scores: {host:0,guest:0}, answererRole: 'host',
+    currentQIdx: firstQ.qIdx, currentQPool: firstQ.qPool,
+    usedPlayful: [], usedSpicy: [],
+    realAnswer: null, guessAnswer: null, winner: null,
+    nextQType: 'any', lastUpdated: Date.now()
+  };
   await set(roomRef(code), state);
   await set(chatRef(code), []);
   document.getElementById('show-code').textContent = code;
@@ -374,21 +446,54 @@ window.hostStartGame = async function() {
   const state = await getState();
   if (!state || !state.guest) return;
   const mode = document.getElementById('mc-spicy').classList.contains('selected') ? 'spicy' : 'playful';
-  const pool = mode === 'playful' ? playfulQ : spicyQ;
-  const shuffled = shuffle([...Array(pool.length).keys()]);
-  Object.assign(state, { mode, phase: 'answering', round: 1, answererRole: 'host',
-    realAnswer: null, guessAnswer: null, questionOrder: shuffled, currentQIdx: shuffled[0],
-    usedCount: 1, lastUpdated: Date.now() });
+  const firstQ = pickQuestion('any', [], []);
+  const usedP = firstQ.qPool==='playful' ? [firstQ.qIdx] : [];
+  const usedS = firstQ.qPool==='spicy'   ? [firstQ.qIdx] : [];
+  Object.assign(state, {
+    mode, phase: 'answering', round: 1, answererRole: 'host',
+    scores: {host:0,guest:0},
+    realAnswer: null, guessAnswer: null, winner: null,
+    nextQType: 'any',
+    currentQIdx: firstQ.qIdx, currentQPool: firstQ.qPool,
+    usedPlayful: usedP, usedSpicy: usedS,
+    lastUpdated: Date.now()
+  });
   await saveState(state);
 };
 
 window.hostNextRound = async function() {
   const state = await getState(); if (!state) return;
-  const pool = state.mode === 'playful' ? playfulQ : spicyQ;
-  if (state.usedCount >= pool.length) { state.questionOrder = shuffle([...Array(pool.length).keys()]); state.usedCount = 0; }
-  Object.assign(state, { currentQIdx: state.questionOrder[state.usedCount], usedCount: state.usedCount+1,
-    round: state.round+1, answererRole: state.answererRole==='host'?'guest':'host',
-    phase: 'answering', realAnswer: null, guessAnswer: null, lastUpdated: Date.now() });
+  const nextQ = pickQuestion(selectedQType, state.usedPlayful||[], state.usedSpicy||[]);
+  const usedP = [...(state.usedPlayful||[])];
+  const usedS = [...(state.usedSpicy||[])];
+  if (nextQ.qPool==='playful' && !usedP.includes(nextQ.qIdx)) usedP.push(nextQ.qIdx);
+  if (nextQ.qPool==='spicy'   && !usedS.includes(nextQ.qIdx)) usedS.push(nextQ.qIdx);
+  if (usedP.length >= playfulQ.length) usedP.length = 0;
+  if (usedS.length >= spicyQ.length)   usedS.length = 0;
+  Object.assign(state, {
+    currentQIdx: nextQ.qIdx, currentQPool: nextQ.qPool,
+    usedPlayful: usedP, usedSpicy: usedS,
+    round: state.round+1,
+    answererRole: state.answererRole==='host'?'guest':'host',
+    phase: 'answering', realAnswer: null, guessAnswer: null,
+    nextQType: selectedQType, lastUpdated: Date.now()
+  });
+  await saveState(state);
+};
+
+window.hostPlayAgain = async function() {
+  const state = await getState(); if (!state) return;
+  const firstQ = pickQuestion('any', [], []);
+  const usedP = firstQ.qPool==='playful' ? [firstQ.qIdx] : [];
+  const usedS = firstQ.qPool==='spicy'   ? [firstQ.qIdx] : [];
+  Object.assign(state, {
+    phase: 'answering', round: 1, answererRole: 'host',
+    scores: {host:0, guest:0}, winner: null,
+    realAnswer: null, guessAnswer: null, nextQType: 'any',
+    currentQIdx: firstQ.qIdx, currentQPool: firstQ.qPool,
+    usedPlayful: usedP, usedSpicy: usedS,
+    lastUpdated: Date.now()
+  });
   await saveState(state);
 };
 
@@ -401,9 +506,12 @@ window.lockAnswer = async function() {
 
 async function submitGuess(idx) {
   const state = await getState(); if (!state) return;
-  const gr = state.answererRole === 'host' ? 'guest' : 'host';
+  const gr = state.answererRole==='host'?'guest':'host';
   if (idx === state.realAnswer) state.scores[gr]++;
-  Object.assign(state, { guessAnswer: idx, phase: 'reveal', lastUpdated: Date.now() });
+  state.guessAnswer = idx;
+  state.winner = state.scores[gr] >= WIN_SCORE ? gr : null;
+  state.phase = state.winner ? 'win' : 'reveal';
+  state.lastUpdated = Date.now();
   await saveState(state);
 }
 
@@ -414,89 +522,113 @@ window.leaveGame = async function() {
   showScreen('lobby-screen');
 };
 
+function getPool(state) {
+  return (state.currentQPool || 'playful') === 'playful' ? playfulQ : spicyQ;
+}
+
 function handleState(state) {
   const host     = myRole === 'host';
-  const answerer = (host && state.answererRole==='host') || (!host && state.answererRole==='guest');
+  const answerer = (host&&state.answererRole==='host')||(!host&&state.answererRole==='guest');
   const partner  = host ? state.guest : state.host;
-  const pool     = state.mode === 'playful' ? playfulQ : spicyQ;
+  const pool     = getPool(state);
   const q        = pool[state.currentQIdx];
 
-  if (state.phase === 'lobby' && host) {
+  if (state.phase==='lobby' && host) {
     if (state.guest) {
       document.getElementById('start-btn').disabled = false;
-      document.getElementById('start-btn').textContent = state.guest + ' joined! Start game ▶';
-      document.getElementById('guest-status').textContent = '✅ ' + state.guest + ' has joined!';
+      document.getElementById('start-btn').textContent = state.guest+' joined! Start game ▶';
+      document.getElementById('guest-status').textContent = '✅ '+state.guest+' has joined!';
     }
     return;
   }
 
-  const pk = state.phase+'-'+state.round+'-'+state.answererRole;
+  const pk = state.phase+'-'+state.round+'-'+state.answererRole+(state.winner||'');
   if (pk === lastPhaseKey) return;
   lastPhaseKey = pk; selectedAnswerIdx = -1;
 
-  if (state.phase === 'answering') {
-    if (answerer) {
-      document.getElementById('badge-answer').textContent = 'Round '+state.round+' · Your turn to answer';
-      document.getElementById('prog-answer').style.width = Math.min((state.round/20)*100,100)+'%';
-      document.getElementById('q-answer').textContent = q.q;
-      document.getElementById('sb-answer').innerHTML = sbHTML(state, myRole);
-      const cont = document.getElementById('opts-answer');
-      cont.innerHTML = ''; selectedAnswerIdx = -1; document.getElementById('lock-btn').disabled = true;
-      q.options.forEach((opt,i) => {
-        const b = document.createElement('button'); b.className='opt-btn'; b.textContent=opt;
-        b.onclick = () => {
-          selectedAnswerIdx=i;
-          document.querySelectorAll('#opts-answer .opt-btn').forEach((x,j) => x.className='opt-btn'+(j===i?' chosen':''));
-          document.getElementById('lock-btn').disabled=false;
-        };
-        cont.appendChild(b);
-      });
-      showScreen('answer-screen');
-    } else {
-      document.getElementById('sb-partans').innerHTML = sbHTML(state, null);
-      document.getElementById('partans-name').textContent = partner || 'Partner';
-      showScreen('partner-answering-screen');
-    }
-  } else if (state.phase === 'guessing') {
-    if (!answerer) {
-      const an = state.answererRole==='host' ? state.host : state.guest;
-      document.getElementById('badge-guess').textContent = 'Round '+state.round+' · Guess what '+an+' picked';
-      document.getElementById('q-guess').textContent = q.q;
-      document.getElementById('sb-guess').innerHTML = sbHTML(state, myRole==='host'?'guest':'host');
-      const cont = document.getElementById('opts-guess'); cont.innerHTML = '';
-      q.options.forEach((opt,i) => {
-        const b = document.createElement('button'); b.className='opt-btn'; b.textContent=opt;
-        b.onclick = () => { document.querySelectorAll('#opts-guess .opt-btn').forEach(x=>x.disabled=true); b.className='opt-btn chosen'; submitGuess(i); };
-        cont.appendChild(b);
-      });
-      showScreen('guess-screen');
-    } else {
-      document.getElementById('sb-partguess').innerHTML = sbHTML(state, null);
-      document.getElementById('partguess-name').textContent = partner || 'Partner';
-      showScreen('partner-guessing-screen');
-    }
-  } else if (state.phase === 'reveal') {
-    const correct = state.guessAnswer === state.realAnswer;
-    const gr = state.answererRole==='host' ? 'guest' : 'host';
-    const gn = gr==='host' ? state.host : state.guest;
-    document.getElementById('sb-reveal').innerHTML = sbHTML(state, null);
-    document.getElementById('reveal-icon').textContent = correct ? '✅' : '❌';
-    document.getElementById('reveal-msg').innerHTML = correct
-      ? '<span class="result-correct">'+gn+' got it right!</span><br>'+q.options[state.realAnswer]
-      : '<span class="result-wrong">'+gn+' was wrong.</span><br>The answer was: <strong>'+q.options[state.realAnswer]+'</strong>';
-    document.getElementById('reveal-q').textContent = '\u201c'+q.q+'\u201d';
-    document.getElementById('next-btn').style.display    = host ? 'block' : 'none';
-    document.getElementById('waiting-next').style.display = host ? 'none'  : 'block';
-    showScreen('reveal-screen');
+  if (state.phase==='win') {
+    renderWin(state, host); showScreen('win-screen');
+  } else if (state.phase==='answering') {
+    if (answerer) { renderAnswer(state,q); showScreen('answer-screen'); }
+    else { document.getElementById('sb-partans').innerHTML=sbHTML(state,null); document.getElementById('partans-name').textContent=partner||'Partner'; showScreen('partner-answering-screen'); }
+  } else if (state.phase==='guessing') {
+    if (!answerer) { renderGuess(state,q); showScreen('guess-screen'); }
+    else { document.getElementById('sb-partguess').innerHTML=sbHTML(state,null); document.getElementById('partguess-name').textContent=partner||'Partner'; showScreen('partner-guessing-screen'); }
+  } else if (state.phase==='reveal') {
+    renderReveal(state,q,host); showScreen('reveal-screen');
   }
+}
+
+function renderAnswer(state,q) {
+  document.getElementById('badge-answer').textContent = 'Round '+state.round+' · Your turn to answer';
+  document.getElementById('prog-answer').style.width = Math.min((Math.max(state.scores.host,state.scores.guest)/WIN_SCORE)*100,100)+'%';
+  document.getElementById('q-answer').textContent = q.q;
+  document.getElementById('sb-answer').innerHTML = sbHTML(state,myRole);
+  const cont = document.getElementById('opts-answer');
+  cont.innerHTML = ''; selectedAnswerIdx = -1; document.getElementById('lock-btn').disabled = true;
+  q.options.forEach((opt,i) => {
+    const b = document.createElement('button'); b.className='opt-btn'; b.textContent=opt;
+    b.onclick = () => { selectedAnswerIdx=i; document.querySelectorAll('#opts-answer .opt-btn').forEach((x,j)=>x.className='opt-btn'+(j===i?' chosen':'')); document.getElementById('lock-btn').disabled=false; };
+    cont.appendChild(b);
+  });
+}
+
+function renderGuess(state,q) {
+  const an = state.answererRole==='host'?state.host:state.guest;
+  document.getElementById('badge-guess').textContent = 'Round '+state.round+' · Guess what '+an+' picked';
+  document.getElementById('q-guess').textContent = q.q;
+  document.getElementById('sb-guess').innerHTML = sbHTML(state, myRole==='host'?'guest':'host');
+  const cont = document.getElementById('opts-guess'); cont.innerHTML = '';
+  q.options.forEach((opt,i) => {
+    const b = document.createElement('button'); b.className='opt-btn'; b.textContent=opt;
+    b.onclick = () => { document.querySelectorAll('#opts-guess .opt-btn').forEach(x=>x.disabled=true); b.className='opt-btn chosen'; submitGuess(i); };
+    cont.appendChild(b);
+  });
+}
+
+function renderReveal(state,q,host) {
+  const correct = state.guessAnswer===state.realAnswer;
+  const gr = state.answererRole==='host'?'guest':'host';
+  const gn = gr==='host'?state.host:state.guest;
+  document.getElementById('sb-reveal').innerHTML = sbHTML(state,null);
+  document.getElementById('reveal-icon').textContent = correct?'✅':'❌';
+  document.getElementById('reveal-msg').innerHTML = correct
+    ?'<span class="result-correct">'+gn+' got it right!</span><br>'+q.options[state.realAnswer]
+    :'<span class="result-wrong">'+gn+' was wrong.</span><br>The answer was: <strong>'+q.options[state.realAnswer]+'</strong>';
+  document.getElementById('reveal-q').textContent = '\u201c'+q.q+'\u201d';
+  const qPicker = document.getElementById('q-type-picker');
+  const qLabel  = document.getElementById('q-type-label');
+  const nextBtn  = document.getElementById('next-btn');
+  const waitNext = document.getElementById('waiting-next');
+  if (host) {
+    qPicker.style.display = 'grid'; qLabel.style.display = 'block';
+    nextBtn.style.display = 'block'; waitNext.style.display = 'none';
+    document.querySelectorAll('.q-type-btn').forEach(b=>b.classList.toggle('selected',b.dataset.type==='any'));
+    selectedQType = 'any';
+  } else {
+    qPicker.style.display = 'none'; qLabel.style.display = 'none';
+    nextBtn.style.display = 'none'; waitNext.style.display = 'block';
+  }
+}
+
+function renderWin(state, host) {
+  const wr = state.winner;
+  const wn = wr==='host'?state.host:state.guest;
+  const iWon = (host&&wr==='host')||(!host&&wr==='guest');
+  document.getElementById('win-trophy').textContent = iWon?'🏆':'😅';
+  document.getElementById('win-name').textContent = wn+' wins!';
+  document.getElementById('win-sub').textContent = iWon?'You know them better than they know you 😏':'Better luck next time... 😬';
+  document.getElementById('final-scores').innerHTML = sbHTML(state, wr);
+  document.getElementById('play-again-btn').style.display = host?'block':'none';
+  document.getElementById('waiting-again').style.display = host?'none':'block';
 }
 
 window.sendChatMsg = async function(text) {
   if (!roomCode) return;
   let msgs = [];
-  try { const s = await get(chatRef(roomCode)); if (s.exists() && Array.isArray(s.val())) msgs = s.val(); } catch(e) {}
-  msgs.push({ sender: myName, role: myRole, text, ts: Date.now() });
-  if (msgs.length > 60) msgs = msgs.slice(-60);
+  try { const s = await get(chatRef(roomCode)); if (s.exists()&&Array.isArray(s.val())) msgs = s.val(); } catch(e) {}
+  msgs.push({sender:myName, role:myRole, text, ts:Date.now()});
+  if (msgs.length>60) msgs = msgs.slice(-60);
   await set(chatRef(roomCode), msgs);
 };
 
@@ -508,17 +640,16 @@ function handleChat(msgs) {
 }
 
 function updateBadge(msgs) {
-  const unread = Math.max(0, (msgs?msgs.length:0) - seenMsgCount);
+  const unread = Math.max(0,(msgs?msgs.length:0)-seenMsgCount);
   document.querySelectorAll('.chat-unread').forEach(el => {
-    el.textContent = unread > 0 ? String(unread) : '';
-    el.style.display = unread > 0 ? 'inline-block' : 'none';
+    el.textContent = unread>0?String(unread):'';
+    el.style.display = unread>0?'inline-block':'none';
   });
 }
 
 function buildChat(id) {
   const c = document.getElementById(id); if (!c) return;
-  c.innerHTML = '';
-  const p = document.createElement('div'); p.className = 'chat-panel';
+  const p = document.createElement('div'); p.className='chat-panel';
   p.innerHTML = `
     <div class="chat-header" onclick="toggleChat('${id}')">
       <div class="chat-header-left"><span>💬 Chat</span><span class="chat-unread"></span></div>
@@ -527,7 +658,7 @@ function buildChat(id) {
     <div class="chat-body" id="body-${id}">
       <div class="chat-messages" id="msgs-${id}"><div class="chat-empty">No messages yet</div></div>
       <div class="chat-quick">
-        ${quickReplies.map(r=>`<button onclick="sendChatMsg(${JSON.stringify(r.text)})">${r.label}</button>`).join('')}
+        ${quickReplies.map(r=>`<button class="chat-quick-btn" onclick="sendChatMsg(${JSON.stringify(r.text)})">${r.label}</button>`).join('')}
       </div>
     </div>`;
   c.appendChild(p);
@@ -538,8 +669,8 @@ window.toggleChat = function(id) {
   const chev = document.getElementById('chev-'+id);
   if (!body) return;
   const open = body.classList.toggle('open');
-  if (chev) chev.textContent = open ? '▲' : '▼';
-  if (open) { seenMsgCount = lastChatLen; updateBadge(null); const m = document.getElementById('msgs-'+id); if (m) m.scrollTop = m.scrollHeight; }
+  if (chev) chev.textContent = open?'▲':'▼';
+  if (open) { seenMsgCount=lastChatLen; updateBadge(null); const m=document.getElementById('msgs-'+id); if(m) m.scrollTop=m.scrollHeight; }
 };
 
 function renderChats(msgs) {
@@ -548,9 +679,9 @@ function renderChats(msgs) {
     const el = document.getElementById(id); if (!el) return;
     if (!el.innerHTML) buildChat(id);
     const mc = document.getElementById('msgs-'+id); if (!mc) return;
-    mc.innerHTML = msgs.length === 0
-      ? '<div class="chat-empty">No messages yet</div>'
-      : msgs.map(m=>`<div class="chat-msg ${m.role===myRole?'mine':'theirs'}"><div class="msg-sender">${m.sender}</div>${m.text}</div>`).join('');
+    mc.innerHTML = msgs.length===0
+      ?'<div class="chat-empty">No messages yet</div>'
+      :msgs.map(m=>`<div class="chat-msg ${m.role===myRole?'mine':'theirs'}"><div class="msg-sender">${m.sender}</div>${m.text}</div>`).join('');
     mc.scrollTop = mc.scrollHeight;
   });
   updateBadge(msgs);
