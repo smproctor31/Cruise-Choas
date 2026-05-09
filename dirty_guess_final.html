@@ -266,7 +266,8 @@ const firebaseConfig = {
 
 const db = getDatabase(initializeApp(firebaseConfig));
 
-const playfulQ = [
+// ── Built-in questions ──────────────────────────────────────────
+const builtinPlayful = [
   { q: "You get stuck in an elevator for an hour. What's most likely?", options: ["Panic and push every button","Make out like teenagers","Tell embarrassing stories","Attempt sneaky sex"] },
   { q: "You're both drunk at a wedding and the dance floor is empty. What happens?", options: ["Do the worm","Dirty dance together","Steal the cake and run","Start a conga line"] },
   { q: "A genie gives you one night with zero consequences. What do you do?", options: ["Wild public adventure","Eat everything naked","Prank all your friends","Stay home and watch TV"] },
@@ -289,7 +290,7 @@ const playfulQ = [
   { q: "Your partner surprises you with a weekend trip. You assume it's...?", options: ["A romantic getaway","An adventure activity","A city trip for food and culture","Something completely wild"] },
 ];
 
-const spicyQ = [
+const builtinSpicy = [
   { q: "You're both in a taxi at night with a distracted driver. What happens?", options: ["Keep it PG","Heavy making out","Sneaky hand stuff","Try to stay quiet all the way home"] },
   { q: "You're house-sitting a mansion alone together. What do you do?", options: ["Behave perfectly","Do it in every room","Skinny dip in the pool","Have the loudest sex possible"] },
   { q: "Trapped in a dark closet during a game. What's most likely?", options: ["Stay quiet and wait","Start making out","Fast standing sex","Just laugh the whole time"] },
@@ -312,6 +313,18 @@ const spicyQ = [
   { q: "How adventurous are you, really?", options: ["Pretty vanilla and proud","Open to most things","Will try anything once","Already done things I won't say here"] },
 ];
 
+// ── Live question pools (built-in + custom merged) ──────────────
+let playfulQ = [...builtinPlayful];
+let spicyQ   = [...builtinSpicy];
+
+// Listen for custom questions and merge them in real time
+onValue(ref(db, 'custom_questions'), snap => {
+  const custom = snap.exists() ? Object.values(snap.val()) : [];
+  playfulQ = [...builtinPlayful, ...custom.filter(q => q.type === 'playful').map(q => ({ q: q.q, options: q.options }))];
+  spicyQ   = [...builtinSpicy,   ...custom.filter(q => q.type === 'spicy').map(q =>   ({ q: q.q, options: q.options }))];
+});
+
+// ── Chat quick replies ──────────────────────────────────────────
 const quickReplies = [
   { label: "😂 Sure you did...",            text: "Sure you did... 😂" },
   { label: "🤡 That's embarrassing",        text: "That is genuinely embarrassing for you 🤡" },
@@ -451,12 +464,9 @@ window.hostStartGame = async function() {
   const usedS = firstQ.qPool==='spicy'   ? [firstQ.qIdx] : [];
   Object.assign(state, {
     mode, phase: 'answering', round: 1, answererRole: 'host',
-    scores: {host:0,guest:0},
-    realAnswer: null, guessAnswer: null, winner: null,
-    nextQType: 'any',
-    currentQIdx: firstQ.qIdx, currentQPool: firstQ.qPool,
-    usedPlayful: usedP, usedSpicy: usedS,
-    lastUpdated: Date.now()
+    scores: {host:0,guest:0}, realAnswer: null, guessAnswer: null, winner: null,
+    nextQType: 'any', currentQIdx: firstQ.qIdx, currentQPool: firstQ.qPool,
+    usedPlayful: usedP, usedSpicy: usedS, lastUpdated: Date.now()
   });
   await saveState(state);
 };
@@ -488,11 +498,10 @@ window.hostPlayAgain = async function() {
   const usedS = firstQ.qPool==='spicy'   ? [firstQ.qIdx] : [];
   Object.assign(state, {
     phase: 'answering', round: 1, answererRole: 'host',
-    scores: {host:0, guest:0}, winner: null,
+    scores: {host:0,guest:0}, winner: null,
     realAnswer: null, guessAnswer: null, nextQType: 'any',
     currentQIdx: firstQ.qIdx, currentQPool: firstQ.qPool,
-    usedPlayful: usedP, usedSpicy: usedS,
-    lastUpdated: Date.now()
+    usedPlayful: usedP, usedSpicy: usedS, lastUpdated: Date.now()
   });
   await saveState(state);
 };
@@ -532,6 +541,7 @@ function handleState(state) {
   const partner  = host ? state.guest : state.host;
   const pool     = getPool(state);
   const q        = pool[state.currentQIdx];
+  if (!q) return;
 
   if (state.phase==='lobby' && host) {
     if (state.guest) {
@@ -546,17 +556,14 @@ function handleState(state) {
   if (pk === lastPhaseKey) return;
   lastPhaseKey = pk; selectedAnswerIdx = -1;
 
-  if (state.phase==='win') {
-    renderWin(state, host); showScreen('win-screen');
-  } else if (state.phase==='answering') {
+  if (state.phase==='win') { renderWin(state,host); showScreen('win-screen'); }
+  else if (state.phase==='answering') {
     if (answerer) { renderAnswer(state,q); showScreen('answer-screen'); }
     else { document.getElementById('sb-partans').innerHTML=sbHTML(state,null); document.getElementById('partans-name').textContent=partner||'Partner'; showScreen('partner-answering-screen'); }
   } else if (state.phase==='guessing') {
     if (!answerer) { renderGuess(state,q); showScreen('guess-screen'); }
     else { document.getElementById('sb-partguess').innerHTML=sbHTML(state,null); document.getElementById('partguess-name').textContent=partner||'Partner'; showScreen('partner-guessing-screen'); }
-  } else if (state.phase==='reveal') {
-    renderReveal(state,q,host); showScreen('reveal-screen');
-  }
+  } else if (state.phase==='reveal') { renderReveal(state,q,host); showScreen('reveal-screen'); }
 }
 
 function renderAnswer(state,q) {
@@ -577,7 +584,7 @@ function renderGuess(state,q) {
   const an = state.answererRole==='host'?state.host:state.guest;
   document.getElementById('badge-guess').textContent = 'Round '+state.round+' · Guess what '+an+' picked';
   document.getElementById('q-guess').textContent = q.q;
-  document.getElementById('sb-guess').innerHTML = sbHTML(state, myRole==='host'?'guest':'host');
+  document.getElementById('sb-guess').innerHTML = sbHTML(state,myRole==='host'?'guest':'host');
   const cont = document.getElementById('opts-guess'); cont.innerHTML = '';
   q.options.forEach((opt,i) => {
     const b = document.createElement('button'); b.className='opt-btn'; b.textContent=opt;
@@ -601,24 +608,24 @@ function renderReveal(state,q,host) {
   const nextBtn  = document.getElementById('next-btn');
   const waitNext = document.getElementById('waiting-next');
   if (host) {
-    qPicker.style.display = 'grid'; qLabel.style.display = 'block';
-    nextBtn.style.display = 'block'; waitNext.style.display = 'none';
+    qPicker.style.display='grid'; qLabel.style.display='block';
+    nextBtn.style.display='block'; waitNext.style.display='none';
     document.querySelectorAll('.q-type-btn').forEach(b=>b.classList.toggle('selected',b.dataset.type==='any'));
-    selectedQType = 'any';
+    selectedQType='any';
   } else {
-    qPicker.style.display = 'none'; qLabel.style.display = 'none';
-    nextBtn.style.display = 'none'; waitNext.style.display = 'block';
+    qPicker.style.display='none'; qLabel.style.display='none';
+    nextBtn.style.display='none'; waitNext.style.display='block';
   }
 }
 
-function renderWin(state, host) {
+function renderWin(state,host) {
   const wr = state.winner;
   const wn = wr==='host'?state.host:state.guest;
   const iWon = (host&&wr==='host')||(!host&&wr==='guest');
   document.getElementById('win-trophy').textContent = iWon?'🏆':'😅';
   document.getElementById('win-name').textContent = wn+' wins!';
   document.getElementById('win-sub').textContent = iWon?'You know them better than they know you 😏':'Better luck next time... 😬';
-  document.getElementById('final-scores').innerHTML = sbHTML(state, wr);
+  document.getElementById('final-scores').innerHTML = sbHTML(state,wr);
   document.getElementById('play-again-btn').style.display = host?'block':'none';
   document.getElementById('waiting-again').style.display = host?'none':'block';
 }
@@ -627,7 +634,7 @@ window.sendChatMsg = async function(text) {
   if (!roomCode) return;
   let msgs = [];
   try { const s = await get(chatRef(roomCode)); if (s.exists()&&Array.isArray(s.val())) msgs = s.val(); } catch(e) {}
-  msgs.push({sender:myName, role:myRole, text, ts:Date.now()});
+  msgs.push({sender:myName,role:myRole,text,ts:Date.now()});
   if (msgs.length>60) msgs = msgs.slice(-60);
   await set(chatRef(roomCode), msgs);
 };
