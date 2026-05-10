@@ -229,7 +229,7 @@ hr { border: none; border-top: 1px solid #eee; margin: 1rem 0; }
         <div class="q-type-btn" data-type="spicy">🌶️ Spicy</div>
       </div>
       <button class="btn btn-primary" id="next-btn" style="display:none;margin-top:0;">Next round ▶</button>
-      <div id="waiting-next" style="text-align:center;font-size:14px;color:#888;margin-top:0.75rem;display:none;">Waiting for host to start next round...</div>
+      <div id="waiting-next" style="text-align:center;font-size:14px;color:#888;margin-top:0.75rem;display:none;">Waiting for the other player to start next round...</div>
     </div>
     <button class="btn btn-subtle" id="leave-btn-reveal" style="margin-top:0;">Leave game</button>
     <div id="chat-reveal"></div>
@@ -638,20 +638,49 @@ function submitGuess(idx) {
 }
 
 function renderReveal(state, q, host) {
-  const correct = state.guessAnswer===state.realAnswer;
-  const gr = state.answererRole==='host'?'guest':'host';
-  const gn = gr==='host'?state.host:state.guest;
-  document.getElementById('sb-reveal').innerHTML = sbHTML(state,null);
-  document.getElementById('reveal-icon').textContent = correct?'✅':'❌';
-  document.getElementById('reveal-msg').innerHTML = correct
-    ?'<span class="result-correct">'+gn+' got it right!</span><br>'+q.options[state.realAnswer]
-    :'<span class="result-wrong">'+gn+' was wrong.</span><br>The answer was: <strong>'+q.options[state.realAnswer]+'</strong>';
-  document.getElementById('reveal-q').textContent = '\u201c'+q.q+'\u201d';
+  const correct     = state.guessAnswer === state.realAnswer;
+  const answererRole = state.answererRole;
+  const guesserRole  = answererRole === 'host' ? 'guest' : 'host';
+  const answererName = answererRole === 'host' ? state.host : state.guest;
+  const guesserName  = guesserRole  === 'host' ? state.host : state.guest;
+  const iAmAnswerer  = (host && answererRole==='host') || (!host && answererRole==='guest');
+
+  document.getElementById('sb-reveal').innerHTML = sbHTML(state, null);
+  document.getElementById('reveal-icon').textContent = correct ? '✅' : '❌';
+
+  // Show both picks clearly
+  let html = '';
+  if (correct) {
+    html += '<p style="font-size:15px;font-weight:700;color:#1a7a3a;margin-bottom:1rem;">'+ guesserName +' got it right!</p>';
+  } else {
+    html += '<p style="font-size:15px;font-weight:700;color:#c0392b;margin-bottom:1rem;">'+ guesserName +' was wrong!</p>';
+  }
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:left;margin-bottom:0.75rem;">';
+  // Answerer's pick
+  html += '<div style="background:#eef4ff;border:1px solid #c0d8ff;border-radius:10px;padding:0.65rem 0.75rem;">'
+        + '<div style="font-size:10px;font-weight:700;color:#4f8ef7;margin-bottom:4px;text-transform:uppercase;">'+ answererName +' answered</div>'
+        + '<div style="font-size:14px;font-weight:600;color:#1a1a1a;">'+ q.options[state.realAnswer] +'</div>'
+        + '</div>';
+  // Guesser's pick
+  const guessBg    = correct ? '#edfaf1' : '#fff0f0';
+  const guessBdr   = correct ? '#34c759' : '#ff3b30';
+  const guessColor = correct ? '#1a7a3a' : '#c0392b';
+  html += '<div style="background:'+guessBg+';border:1px solid '+guessBdr+';border-radius:10px;padding:0.65rem 0.75rem;">'
+        + '<div style="font-size:10px;font-weight:700;color:'+guessColor+';margin-bottom:4px;text-transform:uppercase;">'+ guesserName +' guessed</div>'
+        + '<div style="font-size:14px;font-weight:600;color:#1a1a1a;">'+ q.options[state.guessAnswer] +'</div>'
+        + '</div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:#888;font-style:italic;">“'+ q.q +'”</div>';
+  document.getElementById('reveal-msg').innerHTML = html;
+  document.getElementById('reveal-q').textContent = '';
+
   const qPicker  = document.getElementById('q-type-picker');
   const qLabel   = document.getElementById('q-type-label');
   const nextBtn  = document.getElementById('next-btn');
   const waitNext = document.getElementById('waiting-next');
-  if (host) {
+
+  // The ANSWERER (not the host) controls the next round
+  if (iAmAnswerer) {
     qPicker.style.display='grid'; qLabel.style.display='block';
     nextBtn.style.display='block'; waitNext.style.display='none';
     document.querySelectorAll('.q-type-btn').forEach(b=>b.classList.toggle('selected',b.dataset.type==='any'));
@@ -670,8 +699,9 @@ function renderWin(state, host) {
   document.getElementById('win-name').textContent = wn+' wins!';
   document.getElementById('win-sub').textContent = iWon?'You know them better than they know you 😏':'Better luck next time... 😬';
   document.getElementById('final-scores').innerHTML = sbHTML(state,wr);
-  document.getElementById('play-again-btn').style.display = host?'block':'none';
-  document.getElementById('waiting-again').style.display  = host?'none':'block';
+  // Both players can start a new game
+  document.getElementById('play-again-btn').style.display = 'block';
+  document.getElementById('waiting-again').style.display  = 'none';
 }
 
 // ── Chat ───────────────────────────────────────────────────────
